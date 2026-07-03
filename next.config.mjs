@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === "production";
+const basePath = process.env.BASE_PATH ?? "";
 
 const nextConfig = {
   output: "export",
   distDir: "out",
-  basePath: isProd ? "/things-never-come" : "",
+  basePath,
   trailingSlash: true,
   images: {
     unoptimized: true,
