@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, User } from "lucide-react";
+import { User } from "lucide-react";
 import { getNickname, setNickname } from "@/lib/mock-data";
 
 export default function SettingsPage() {
@@ -19,25 +19,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-[#f2f5ff]">
-      {/* Header */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 bg-[#f2f5ff]/90 px-4 py-3.5 backdrop-blur-md">
-        <button
-          onClick={() => router.back()}
-          aria-label="返回"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-card transition active:scale-95"
-        >
-          <ChevronLeft size={22} className="text-ink" />
-        </button>
-        <h1 className="text-lg font-bold text-ink">设置</h1>
-      </div>
+    <div className="mx-auto max-w-site px-6 py-8 md:px-8">
+      <h1 className="text-2xl font-bold text-ink">设置</h1>
 
-      {/* Avatar + name input */}
-      <div className="flex flex-col items-center gap-4 px-6 pt-6">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-white shadow-card">
-          <User size={40} strokeWidth={2} />
+      <div className="mt-8 max-w-md">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-white shadow-card">
+            <User size={40} strokeWidth={2} />
+          </div>
         </div>
-        <div className="w-full">
+
+        <div className="mt-6">
           <label
             htmlFor="nickname"
             className="mb-2 block text-sm font-medium text-ink"
@@ -50,16 +42,13 @@ export default function SettingsPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="请输入用户名"
-            className="w-full rounded-2xl bg-white px-4 py-3 text-sm text-ink shadow-card placeholder:text-muted focus:outline-none"
+            className="w-full rounded-xl bg-white px-4 py-3 text-sm text-ink shadow-card placeholder:text-muted outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
-      </div>
 
-      {/* Save button */}
-      <div className="mt-auto px-6 pb-28 pt-8">
         <button
           onClick={handleSave}
-          className="w-full rounded-2xl bg-accent py-3.5 text-sm font-bold text-white shadow-card transition active:scale-[0.98]"
+          className="mt-6 w-full rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark"
         >
           保存
         </button>

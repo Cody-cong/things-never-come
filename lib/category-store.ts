@@ -1,24 +1,18 @@
-import { categories as baseCategories } from "./mock-data";
-
 /**
- * 分类持久层：管理端编辑的商品分类存 localStorage，
- * 前台读取时优先用 localStorage 列表，无则回退到 mock-data 基础分类。
+ * 分类持久层：管理端编辑的分类存 localStorage，初始无任何预设分类。
  */
 const KEY = "gnc_categories_v1";
 
-/** 客户端读取：localStorage 有就用 localStorage 列表，否则用 baseCategories。
- *  注意：空列表是合法状态（用户删除了所有分类），不应回退到基础分类。
- *  只有 localStorage 完全没有 key（首次使用）或解析失败时才回退。
- */
+/** 客户端读取：localStorage 有就用 localStorage 列表，否则为空数组 */
 function read(): string[] {
-  if (typeof window === "undefined") return baseCategories;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw === null) return baseCategories;
+    if (raw === null) return [];
     const list = JSON.parse(raw);
-    return Array.isArray(list) ? list : baseCategories;
+    return Array.isArray(list) ? list : [];
   } catch {
-    return baseCategories;
+    return [];
   }
 }
 
@@ -28,7 +22,7 @@ function write(list: string[]): void {
   }
 }
 
-/** 返回当前生效的全部分类（localStorage 优先，回退基础分类） */
+/** 返回当前生效的全部分类 */
 export function getCategories(): string[] {
   return read();
 }
@@ -59,11 +53,4 @@ export function updateCategory(oldName: string, newName: string): void {
 export function deleteCategory(name: string): void {
   const list = read().filter((c) => c !== name);
   write(list);
-}
-
-/** 重置分类：清空 localStorage，回退到基础分类 */
-export function resetCategories(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(KEY);
-  }
 }

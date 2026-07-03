@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingCart, User } from "lucide-react";
+import { Home, ShoppingCart, User, LucideIcon } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
-import { LucideIcon } from "lucide-react";
 
 interface NavItem {
   href: string;
@@ -21,11 +20,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { totalCount } = useCart();
 
-  if (
-    pathname.startsWith("/tracking") ||
-    pathname.startsWith("/done") ||
-    pathname.startsWith("/product")
-  ) {
+  if (pathname.startsWith("/product")) {
     return null;
   }
 

@@ -5,6 +5,7 @@ import React, {
   useContext,
   useEffect,
   useReducer,
+  useState,
   ReactNode,
 } from "react";
 import { CartItem, Order } from "./types";
@@ -97,6 +98,7 @@ const ORDER_KEY = "gnc_orders";
 export function AppProviders({ children }: { children: ReactNode }) {
   const [items, dispatch] = useReducer(cartReducer, []);
   const [orders, dispatchOrder] = useReducer(orderReducer, []);
+  const [hydrated, setHydrated] = useState(false);
 
   // SSR-safe hydration: only read localStorage in the browser.
   useEffect(() => {
@@ -108,23 +110,26 @@ export function AppProviders({ children }: { children: ReactNode }) {
     } catch {
       /* ignore malformed storage */
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     try {
       localStorage.setItem(CART_KEY, JSON.stringify(items));
     } catch {
       /* ignore */
     }
-  }, [items]);
+  }, [items, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     try {
       localStorage.setItem(ORDER_KEY, JSON.stringify(orders));
     } catch {
       /* ignore */
     }
-  }, [orders]);
+  }, [orders, hydrated]);
 
   const totalAmount = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const totalCount = items.reduce((s, i) => s + i.quantity, 0);

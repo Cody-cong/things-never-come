@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
+  --background: #FFF8F0;
+  --foreground: #2D1F1F;
 }
 
 * {
@@ -15,11 +15,16 @@ html,
 body {
   padding: 0;
   margin: 0;
-  background: #FFF9F5;
+  background: #FFF8F0;
   color: var(--foreground);
-  font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 a {
@@ -65,9 +70,9 @@ button {
 .skeleton {
   background: linear-gradient(
     90deg,
-    #FFF3E0 25%,
-    #FFE0B2 37%,
-    #FFF3E0 63%
+    #FFF0E0 25%,
+    #FFE4CC 37%,
+    #FFF0E0 63%
   );
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
@@ -99,13 +104,13 @@ button {
 
 .pastel-card {
   background: #ffffff;
-  border-radius: 28px;
-  box-shadow: 0 4px 20px rgba(93, 64, 55, 0.06);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(45, 31, 31, 0.05), 0 1px 2px rgba(45, 31, 31, 0.04);
 }
 
 .chip {
-  padding: 0.375rem 0.875rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
 }
 
 .soft-btn {
@@ -116,33 +121,41 @@ button {
   transform: scale(0.96);
 }
 
-.dot-decoration::before,
-.dot-decoration::after {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.3;
+.section {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
 }
 
-.blob-shape {
-  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+.section-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #2D1F1F;
+  text-align: center;
+  margin-bottom: 0.75rem;
 }
 
-.gradient-blush {
-  background: linear-gradient(135deg, #FFE8EC 0%, #FFF9F5 100%);
+.section-subtitle {
+  color: #6B5E5E;
+  text-align: center;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.gradient-mint {
-  background: linear-gradient(135deg, #E8F5E9 0%, #FFF9F5 100%);
-}
+@media print {
+  .no-print {
+    display: none !important;
+  }
 
-.gradient-sand {
-  background: linear-gradient(135deg, #FFF3E0 0%, #FFF9F5 100%);
-}
+  body {
+    background: #ffffff !important;
+  }
 
-.gradient-lavender {
-  background: linear-gradient(135deg, #F3E5F5 0%, #FFF9F5 100%);
+  .receipt-paper {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    max-width: 480px;
+    margin: 0 auto;
+  }
 }

@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, RotateCcw, Check, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import {
   getCategories,
   addCategory,
   updateCategory,
   deleteCategory,
-  resetCategories,
 } from "@/lib/category-store";
 
 /**
- * 分类管理视图：添加 / 重命名 / 删除 / 重置分类。
+ * 分类管理视图：添加 / 重命名 / 删除分类。
  * 全部使用内联输入框，不依赖 window.prompt/confirm（预览浏览器不支持）。
  * 注意：删除分类不会删除该分类下的商品，仅移除分类本身。
  */
@@ -25,8 +24,6 @@ export default function CategoryManager() {
   const [editName, setEditName] = useState("");
   // 删除确认
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
-  // 重置确认
-  const [confirmingReset, setConfirmingReset] = useState(false);
 
   function refresh() {
     setList(getCategories());
@@ -68,24 +65,11 @@ export default function CategoryManager() {
     refresh();
   }
 
-  function handleReset() {
-    resetCategories();
-    setConfirmingReset(false);
-    refresh();
-  }
-
   return (
     <div className="flex flex-col">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-base font-semibold text-ink">分类管理</h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setConfirmingReset(true)}
-            className="flex items-center gap-1 rounded-full border border-blush px-3 py-1.5 text-xs text-ink"
-          >
-            <RotateCcw size={12} />
-            重置分类
-          </button>
           <button
             onClick={() => setAdding(true)}
             className="flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white"
@@ -133,27 +117,6 @@ export default function CategoryManager() {
               className="flex h-8 w-8 items-center justify-center rounded-full bg-blush text-ink"
             >
               <X size={14} />
-            </button>
-          </div>
-        )}
-
-        {/* 重置确认 */}
-        {confirmingReset && (
-          <div className="pastel-card flex items-center gap-2 p-2.5">
-            <span className="flex-1 text-xs text-ink">
-              确认重置分类？将恢复到初始 6 个分类。
-            </span>
-            <button
-              onClick={handleReset}
-              className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white"
-            >
-              确认
-            </button>
-            <button
-              onClick={() => setConfirmingReset(false)}
-              className="rounded-full border border-blush px-3 py-1.5 text-xs text-ink"
-            >
-              取消
             </button>
           </div>
         )}

@@ -1,9 +1,7 @@
 import type { Product } from "./types";
-import { products as baseProducts } from "./mock-products";
 
 /**
- * 商品持久层：管理端编辑结果存 localStorage，
- * 前台读取时优先用 localStorage 全量列表，无则回退到 mock-products 基础数据。
+ * 商品持久层：管理端编辑结果存 localStorage，初始无任何预设商品。
  */
 const KEY = "gnc_products_v1";
 
@@ -16,22 +14,20 @@ export interface ProductInput {
   originalPrice?: number;
   category: string;
   description: string;
-  distanceKm: number;
-  etaMin: number;
   specs?: string[];
   hot?: boolean;
 }
 
-/** 客户端读取：localStorage 有就用 localStorage 全量列表，否则用 baseProducts */
+/** 客户端读取：localStorage 有就用 localStorage 全量列表，否则为空数组 */
 function readAll(): Product[] {
-  if (typeof window === "undefined") return baseProducts;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw === null) return baseProducts;
+    if (raw === null) return [];
     const list = JSON.parse(raw) as Product[];
-    return Array.isArray(list) ? list : baseProducts;
+    return Array.isArray(list) ? list : [];
   } catch {
-    return baseProducts;
+    return [];
   }
 }
 
@@ -40,7 +36,7 @@ function writeAll(list: Product[]): void {
   localStorage.setItem(KEY, JSON.stringify(list));
 }
 
-/** 返回当前生效的全部商品（localStorage 优先，回退基础数据） */
+/** 返回当前生效的全部商品 */
 export function getAllProducts(): Product[] {
   return readAll();
 }
@@ -76,12 +72,8 @@ export function addProduct(input: ProductInput): Product {
     category: input.category,
     hot: input.hot ?? false,
     description: input.description,
-    distanceKm: input.distanceKm,
-    etaMin: input.etaMin,
     specs: input.specs ?? ["默认"],
-    rating: 5,
     sales: 0,
-    reviews: [],
     imagePrompt: "",
   };
   list.push(product);
@@ -108,10 +100,4 @@ export function deleteProduct(id: string): void {
 export function deleteAllProducts(): void {
   if (typeof window === "undefined") return;
   writeAll([]);
-}
-
-/** 重置数据：清空 localStorage，回退到 mock-products 基础数据 */
-export function resetProducts(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(KEY);
 }

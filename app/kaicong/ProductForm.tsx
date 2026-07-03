@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import { categories as baseCategories } from "@/lib/mock-data";
 import { getCategories } from "@/lib/category-store";
 import {
   addProduct,
@@ -17,10 +16,9 @@ interface FormState {
   name: string;
   nameEn: string;
   price: string;
-  distanceKm: string;
-  etaMin: string;
   description: string;
   category: string;
+  hot: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -28,10 +26,9 @@ const EMPTY_FORM: FormState = {
   name: "",
   nameEn: "",
   price: "",
-  distanceKm: "",
-  etaMin: "",
   description: "",
-  category: baseCategories[0] ?? "数码",
+  category: "",
+  hot: false,
 };
 
 function toForm(p: Product): FormState {
@@ -40,18 +37,11 @@ function toForm(p: Product): FormState {
     name: p.name,
     nameEn: p.nameEn ?? "",
     price: String(p.price),
-    distanceKm: String(p.distanceKm),
-    etaMin: String(p.etaMin),
     description: p.description,
     category: p.category,
+    hot: p.hot,
   };
 }
-
-const NUM_FIELDS: { field: keyof FormState; label: string }[] = [
-  { field: "price", label: "价格（元）" },
-  { field: "distanceKm", label: "送达路程（km）" },
-  { field: "etaMin", label: "送达时间（分钟）" },
-];
 
 /** 商品新增/编辑表单。initial 为 null 表示新增，否则编辑该商品。 */
 export default function ProductForm({
@@ -67,8 +57,8 @@ export default function ProductForm({
   const [form, setForm] = useState<FormState>(
     initial ? toForm(initial) : EMPTY_FORM
   );
-  // 分类列表：初始用 baseCategories 保证 hydration 一致，挂载后读 localStorage
-  const [cats, setCats] = useState<string[]>(baseCategories);
+  // 分类列表：初始为空，挂载后读 localStorage
+  const [cats, setCats] = useState<string[]>([]);
 
   useEffect(() => {
     const list = getCategories();
@@ -81,7 +71,7 @@ export default function ProductForm({
     );
   }, []);
 
-  function update(field: keyof FormState, value: string) {
+  function update(field: keyof FormState, value: string | boolean) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
@@ -103,8 +93,10 @@ export default function ProductForm({
       window.alert("请填写有效价格");
       return;
     }
-    const distanceKm = Number(form.distanceKm);
-    const etaMin = Number(form.etaMin);
+    if (!form.category) {
+      window.alert("请先添加并选择一个分类");
+      return;
+    }
     const input: ProductInput = {
       name: form.name.trim(),
       nameEn: form.nameEn.trim(),
@@ -112,8 +104,7 @@ export default function ProductForm({
       price,
       category: form.category,
       description: form.description.trim(),
-      distanceKm: distanceKm > 0 ? distanceKm : 10,
-      etaMin: etaMin > 0 ? etaMin : 45,
+      hot: form.hot,
     };
     if (isEdit && initial) {
       updateProduct(initial.id, input);
@@ -166,20 +157,14 @@ export default function ProductForm({
         className={inputCls}
       />
 
-      <div className="mt-3 flex gap-3">
-        {NUM_FIELDS.map((f) => (
-          <div key={f.field} className="flex-1">
-            <label className={labelCls}>{f.label}</label>
-            <input
-              type="number"
-              value={form[f.field]}
-              onChange={(e) => update(f.field, e.target.value)}
-              placeholder="0"
-              className={inputCls}
-            />
-          </div>
-        ))}
-      </div>
+      <label className={`mt-3 ${labelCls}`}>价格（USD）</label>
+      <input
+        type="number"
+        value={form.price}
+        onChange={(e) => update("price", e.target.value)}
+        placeholder="0"
+        className={inputCls}
+      />
 
       <label className={`mt-3 ${labelCls}`}>商品描述</label>
       <textarea
@@ -196,12 +181,35 @@ export default function ProductForm({
         onChange={(e) => update("category", e.target.value)}
         className={inputCls}
       >
+        <option value="" disabled>
+          {cats.length ? "请选择分类" : "暂无分类，请先去分类管理添加"}
+        </option>
         {cats.map((c) => (
           <option key={c} value={c}>
             {c}
           </option>
         ))}
       </select>
+
+      <label className={`mt-3 ${labelCls}`}>首页热门</label>
+      <button
+        type="button"
+        onClick={() => update("hot", !form.hot)}
+        className={`flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+          form.hot
+            ? "bg-accent text-white"
+            : "border border-blush bg-white text-ink"
+        }`}
+      >
+        <span
+          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+            form.hot ? "border-white" : "border-muted"
+          }`}
+        >
+          {form.hot && <span className="h-2 w-2 rounded-full bg-white" />}
+        </span>
+        {form.hot ? "已加入首页热门" : "未加入首页热门"}
+      </button>
 
       <div className="mt-5 flex gap-3">
         <button

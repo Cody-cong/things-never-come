@@ -5,15 +5,8 @@ export type ImageSize =
   | "landscape_4_3"
   | "landscape_16_9";
 
-export interface Review {
-  id: string;
-  nickname: string;
-  stars: number;
-  content: string;
-}
-
 /**
- * Shop 接口保留以兼容 mock-data 导出，后续页面不再使用。
+ * 店铺概念已下线，接口保留仅作类型兼容。
  * 新的数据结构以 Product.category 为分类主键。
  */
 export interface Shop {
@@ -38,12 +31,8 @@ export interface Product {
   category: string; // 分类主键（数码/服饰/家居/美妆/食品/图书）
   hot: boolean; // 是否热门商品
   description: string; // 商品详情段落（幽默呼应主题）
-  distanceKm: number; // 距离（公里）
-  etaMin: number; // 预计送达（分钟）
   specs: string[];
-  rating: number;
   sales: number;
-  reviews: Review[];
   imagePrompt: string;
 }
 
@@ -57,18 +46,11 @@ export interface CartItem {
   quantity: number;
 }
 
-export type OrderStatus = "pending" | "shipped" | "delivering" | "done";
-
 export interface Order {
   id: string;
   items: CartItem[];
   totalAmount: number;
   createdAt: number;
-  status: OrderStatus;
+  status: "pending";
 }
 
-export interface Address {
-  name: string;
-  phone: string;
-  address: string;
-}
