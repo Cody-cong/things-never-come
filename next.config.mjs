@@ -3,7 +3,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig = {
   output: "export",
-  distDir: "dist",
+  distDir: "out",
   basePath: isProd ? "/things-never-come" : "",
   trailingSlash: true,
   images: {
