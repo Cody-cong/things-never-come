@@ -18,12 +18,6 @@ const STEPS = [
   { title: "获取成就" },
 ];
 
-const BENEFITS = [
-  { desc: "68%的年轻人有深夜冲动消费习惯，0 元" },
-  { desc: "全程零消费，钱包零压力，100%" },
-  { desc: "多巴胺满足，零后悔" },
-];
-
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -182,29 +176,6 @@ export default function HomePage() {
                 <div>
                   <h3 className="text-base font-semibold text-ink">{step.title}</h3>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 优势亮点 */}
-      <section className="section bg-white">
-        <div className="mx-auto max-w-site px-6 md:px-8">
-          <div className="mb-10 text-center">
-            <h2 className="section-title">为什么选择假装购物</h2>
-            <p className="section-subtitle text-sm md:text-base">
-              一种全新的省钱与放松方式。
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            {BENEFITS.map((b, idx) => (
-              <div
-                key={idx}
-                className="rounded-2xl bg-cream p-6 text-center transition hover:shadow-soft"
-              >
-                <p className="text-sm leading-relaxed text-ink">{b.desc}</p>
               </div>
             ))}
           </div>

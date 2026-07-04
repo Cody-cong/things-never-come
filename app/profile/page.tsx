@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Award, ChevronRight } from "lucide-react";
 import {
   getUserProfile,
   setUserProfile,
@@ -88,19 +86,6 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
-      </div>
-
-      <div className="mt-6 rounded-2xl bg-white p-2 shadow-card">
-        <Link
-          href="/achievements"
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 transition hover:bg-cream/50"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cream">
-            <Award size={20} className="text-accent" />
-          </div>
-          <span className="flex-1 text-left text-base text-ink">我的成就</span>
-          <ChevronRight size={18} className="text-muted" />
-        </Link>
       </div>
 
       {saved && (

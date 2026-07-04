@@ -7,14 +7,19 @@ import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "./ProductImage";
+import LimitAlertModal from "./LimitAlertModal";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { items, addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
+    show: false,
+    message: "",
+  });
 
   const spec = product.specs[0] ?? "默认";
 
@@ -25,6 +30,19 @@ export default function ProductCard({ product }: ProductCardProps) {
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    const max = product.maxQuantity;
+    if (max && max > 0) {
+      const currentQty = items
+        .filter((i) => i.productId === product.id)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      if (currentQty + quantity > max) {
+        setLimitAlert({
+          show: true,
+          message: product.limitMessage?.trim() || `该商品每人限购 ${max} 件`,
+        });
+        return;
+      }
+    }
     addItem({
       productId: product.id,
       shopId: product.shopId,
@@ -74,9 +92,17 @@ export default function ProductCard({ product }: ProductCardProps) {
             >
               <Minus size={14} />
             </button>
-            <span className="w-7 text-center text-sm font-medium text-ink">
-              {quantity}
-            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={quantity}
+              onChange={(e) => {
+                const v = parseInt(e.target.value.replace(/\D/g, ""), 10);
+                setQuantity(isNaN(v) || v < 1 ? 1 : v);
+              }}
+              className="w-7 bg-transparent text-center text-sm font-medium text-ink outline-none"
+              aria-label="购买数量"
+            />
             <button
               type="button"
               onClick={(e) => {
@@ -99,6 +125,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
       </div>
+
+      {limitAlert.show && (
+        <LimitAlertModal
+          message={limitAlert.message}
+          onClose={() => setLimitAlert({ show: false, message: "" })}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getProductsByCategory } from "@/lib/product-store";
 import { getCategories } from "@/lib/category-store";
@@ -14,31 +14,36 @@ export default function CategoryListClient() {
   const [list, setList] = useState<Product[]>([]);
   const [cats, setCats] = useState<string[]>([]);
 
-  const title = "商品";
-
-  useEffect(() => {
-    const categoryName = new URLSearchParams(window.location.search).get("name") ?? "ALL";
-    setName(categoryName);
-    async function load() {
-      const [cats, products] = await Promise.all([
-        getCategories(),
-        getProductsByCategory(categoryName),
-      ]);
-      setCats(cats);
-      setList(products);
-      setLoading(false);
-    }
-    load();
+  const loadCategory = useCallback(async (categoryName: string) => {
+    setLoading(true);
+    const [categories, products] = await Promise.all([
+      getCategories(),
+      getProductsByCategory(categoryName),
+    ]);
+    setCats(categories);
+    setList(products);
+    setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const categoryName =
+      new URLSearchParams(window.location.search).get("name") ?? "ALL";
+    setName(categoryName);
+    loadCategory(categoryName);
+  }, [loadCategory]);
+
   function switchCategory(next: string) {
-    router.push(`/category/?name=${encodeURIComponent(next)}`);
+    setName(next);
+    router.push(`/category/?name=${encodeURIComponent(next)}`, {
+      scroll: false,
+    });
+    loadCategory(next);
   }
 
   return (
     <div className="mx-auto max-w-site px-6 py-8 md:px-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">{title}</h1>
+        <h1 className="text-2xl font-bold text-ink">商品</h1>
         {!loading && (
           <p className="mt-1 text-sm text-muted">共 {list.length} 件好物</p>
         )}

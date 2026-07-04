@@ -174,9 +174,17 @@ export default function ProductDetailClient() {
               >
                 <Minus size={16} />
               </button>
-              <span className="min-w-[32px] text-center text-sm font-bold text-ink">
-                {quantity}
-              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={quantity}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value.replace(/\D/g, ""), 10);
+                  setQuantity(isNaN(v) || v < 1 ? 1 : v);
+                }}
+                className="w-8 bg-transparent text-center text-sm font-bold text-ink outline-none"
+                aria-label="购买数量"
+              />
               <button
                 onClick={() => setQuantity((q) => q + 1)}
                 aria-label="增加数量"

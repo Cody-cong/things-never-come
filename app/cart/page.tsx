@@ -11,7 +11,7 @@ import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
 import ReceiptModal from "@/components/receipt/ReceiptModal";
 import AchievementModal from "@/components/AchievementModal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { Order } from "@/lib/types";
 
 export default function CartPage() {
@@ -25,6 +25,7 @@ export default function CartPage() {
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
+  const lastOrderRef = useRef<Order | null>(null);
 
   async function handleCheckout() {
     if (submitting || items.length === 0) return;
@@ -39,6 +40,7 @@ export default function CartPage() {
       };
       addOrder(order);
       clearCart();
+      lastOrderRef.current = order;
       setLastOrder(order);
     } catch (e) {
       console.error("[cart] checkout failed", e);
@@ -48,7 +50,7 @@ export default function CartPage() {
   }
 
   function handleReceiptClose() {
-    const order = lastOrder;
+    const order = lastOrderRef.current;
     setLastOrder(null);
     if (order) {
       const unlocked = checkAchievements(order);
@@ -56,8 +58,6 @@ export default function CartPage() {
         setAchievementQueue(unlocked);
         return;
       }
-    }
-    if (order) {
       router.push(`/receipt/?orderId=${order.id}`);
     }
   }
@@ -65,8 +65,11 @@ export default function CartPage() {
   function handleAchievementConfirm() {
     setAchievementQueue((prev) => {
       const next = prev.slice(1);
-      if (next.length === 0 && lastOrder) {
-        router.push(`/receipt/?orderId=${lastOrder.id}`);
+      if (next.length === 0) {
+        const order = lastOrderRef.current;
+        if (order) {
+          router.push(`/receipt/?orderId=${order.id}`);
+        }
       }
       return next;
     });
