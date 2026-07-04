@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart, useOrders } from "@/lib/cart-context";
 import { getProductById } from "@/lib/product-store";
@@ -9,10 +10,18 @@ import { formatPrice } from "@/lib/utils";
 import { checkAchievements, type Achievement } from "@/lib/achievements";
 import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
-import ReceiptModal from "@/components/receipt/ReceiptModal";
-import AchievementModal from "@/components/AchievementModal";
 import { useState, useRef } from "react";
 import type { Order } from "@/lib/types";
+
+// 懒加载模态框，减小首屏体积
+const ReceiptModal = dynamic(
+  () => import("@/components/receipt/ReceiptModal"),
+  { ssr: false }
+);
+const AchievementModal = dynamic(
+  () => import("@/components/AchievementModal"),
+  { ssr: false }
+);
 
 export default function CartPage() {
   const router = useRouter();
@@ -38,6 +47,7 @@ export default function CartPage() {
         createdAt: Date.now(),
         status: "pending",
       };
+      console.log("[checkout] 订单总额:", order.totalAmount, "商品数:", order.items.length);
       addOrder(order);
       clearCart();
       lastOrderRef.current = order;
@@ -54,6 +64,7 @@ export default function CartPage() {
     setLastOrder(null);
     if (order) {
       const unlocked = checkAchievements(order);
+      console.log("[achievement] 总额:", order.totalAmount, "解锁:", unlocked.length, unlocked.map(a => a.id));
       if (unlocked.length > 0) {
         setAchievementQueue(unlocked);
         return;
@@ -198,6 +209,24 @@ export default function CartPage() {
           <p className="mt-2 text-xs text-muted">
             不会扣除真实资金，纯模拟结算。
           </p>
+
+          {/* 成就进度提示 */}
+          {totalAmount >= 100_000_000 && (
+            <p className="mt-2 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent">
+              🎯 结算后解锁：完成小目标
+            </p>
+          )}
+          {totalAmount >= 1_000_000_000_000 && (
+            <p className="mt-1 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent">
+              💎 结算后解锁：神豪
+            </p>
+          )}
+          {new Set(items.map((i) => i.productId)).size >= 15 && (
+            <p className="mt-1 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent">
+              💳 结算后解锁：刷卡无感者
+            </p>
+          )}
+
           <button
             onClick={handleCheckout}
             disabled={submitting || items.length === 0}

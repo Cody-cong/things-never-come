@@ -6,6 +6,8 @@ import React, {
   useEffect,
   useReducer,
   useState,
+  useMemo,
+  useCallback,
   ReactNode,
 } from "react";
 import { CartItem, Order } from "./types";
@@ -148,25 +150,53 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
   }, [orders, hydrated]);
 
-  const totalAmount = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const totalCount = items.reduce((s, i) => s + i.quantity, 0);
+  const totalAmount = useMemo(
+    () => items.reduce((s, i) => s + i.price * i.quantity, 0),
+    [items]
+  );
+  const totalCount = useMemo(
+    () => items.reduce((s, i) => s + i.quantity, 0),
+    [items]
+  );
 
-  const cartValue: CartCtx = {
-    items,
-    totalAmount,
-    totalCount,
-    addItem: (item) => dispatch({ type: "ADD_ITEM", item }),
-    removeItem: (productId, spec) =>
+  const addItem = useCallback(
+    (item: CartItem) => dispatch({ type: "ADD_ITEM", item }),
+    []
+  );
+  const removeItem = useCallback(
+    (productId: string, spec: string) =>
       dispatch({ type: "REMOVE_ITEM", productId, spec }),
-    updateQty: (productId, spec, quantity) =>
+    []
+  );
+  const updateQty = useCallback(
+    (productId: string, spec: string, quantity: number) =>
       dispatch({ type: "UPDATE_QTY", productId, spec, quantity }),
-    clearCart: () => dispatch({ type: "CLEAR_CART" }),
-  };
+    []
+  );
+  const clearCart = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
 
-  const orderValue: OrderCtx = {
-    orders,
-    addOrder: (order) => dispatchOrder({ type: "ADD_ORDER", order }),
-  };
+  const cartValue: CartCtx = useMemo(
+    () => ({
+      items,
+      totalAmount,
+      totalCount,
+      addItem,
+      removeItem,
+      updateQty,
+      clearCart,
+    }),
+    [items, totalAmount, totalCount, addItem, removeItem, updateQty, clearCart]
+  );
+
+  const addOrder = useCallback(
+    (order: Order) => dispatchOrder({ type: "ADD_ORDER", order }),
+    []
+  );
+
+  const orderValue: OrderCtx = useMemo(
+    () => ({ orders, addOrder }),
+    [orders, addOrder]
+  );
 
   return (
     <CartContext.Provider value={cartValue}>

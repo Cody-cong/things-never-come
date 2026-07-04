@@ -25,7 +25,7 @@ interface Piece {
   drift: number;
 }
 
-/** DOM + CSS 礼花效果，无需 canvas，兼容性更好 */
+/** DOM + CSS 礼花效果，CSS 在 globals.css 中定义 */
 export default function Confetti() {
   const pieces = useMemo<Piece[]>(() => {
     return Array.from({ length: 60 }, () => ({
@@ -62,28 +62,6 @@ export default function Confetti() {
           }
         />
       ))}
-      <style jsx>{`
-        .confetti-piece {
-          position: absolute;
-          top: -20px;
-          border-radius: 2px;
-          animation-name: confetti-fall;
-          animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          animation-fill-mode: forwards;
-          transform: rotate(var(--rotate));
-        }
-        @keyframes confetti-fall {
-          0% {
-            transform: translateY(-20px) translateX(0) rotate(var(--rotate));
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(110vh) translateX(var(--drift))
-              rotate(calc(var(--rotate) + 720deg));
-            opacity: 0.8;
-          }
-        }
-      `}</style>
     </div>
   );
 }

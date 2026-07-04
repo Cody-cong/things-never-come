@@ -19,9 +19,9 @@ export default function Header() {
   const pathname = usePathname();
   const { totalCount } = useCart();
   const [hidden, setHidden] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const rafRef = useRef<number | null>(null);
   const pendingY = useRef(0);
+  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
     function handleScroll() {
@@ -35,16 +35,16 @@ export default function Header() {
         // 页面顶部时始终显示
         if (currentY < 20) {
           setHidden(false);
-          setLastScrollY(currentY);
+          lastScrollYRef.current = currentY;
           return;
         }
         // 往下滑动超过阈值时收起，往上翻时出现
-        if (currentY > lastScrollY && currentY > 60) {
+        if (currentY > lastScrollYRef.current && currentY > 60) {
           setHidden(true);
-        } else if (currentY < lastScrollY) {
+        } else if (currentY < lastScrollYRef.current) {
           setHidden(false);
         }
-        setLastScrollY(currentY);
+        lastScrollYRef.current = currentY;
       });
     }
 
@@ -55,7 +55,7 @@ export default function Header() {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [lastScrollY]);
+  }, []);
 
   return (
     <header
