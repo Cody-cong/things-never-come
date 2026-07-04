@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart, useOrders } from "@/lib/cart-context";
 import { getProductById } from "@/lib/product-store";
@@ -10,18 +9,10 @@ import { formatPrice } from "@/lib/utils";
 import { checkAchievements, type Achievement } from "@/lib/achievements";
 import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
+import ReceiptModal from "@/components/receipt/ReceiptModal";
+import AchievementModal from "@/components/AchievementModal";
 import { useState, useRef } from "react";
 import type { Order } from "@/lib/types";
-
-// 懒加载模态框，减小首屏体积
-const ReceiptModal = dynamic(
-  () => import("@/components/receipt/ReceiptModal"),
-  { ssr: false }
-);
-const AchievementModal = dynamic(
-  () => import("@/components/AchievementModal"),
-  { ssr: false }
-);
 
 export default function CartPage() {
   const router = useRouter();
@@ -86,7 +77,9 @@ export default function CartPage() {
     });
   }
 
-  if (items.length === 0 && !lastOrder) {
+  const showingAchievement = achievementQueue.length > 0;
+
+  if (items.length === 0 && !lastOrder && !showingAchievement) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-site flex-col items-center justify-center px-6 py-20 text-center md:px-8">
         <div className="relative">
