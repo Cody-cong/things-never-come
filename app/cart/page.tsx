@@ -4,12 +4,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { getProductById } from "@/lib/product-store";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "@/components/ProductImage";
+import LimitAlertModal from "@/components/LimitAlertModal";
+import { useState } from "react";
 
 export default function CartPage() {
   const router = useRouter();
   const { items, totalAmount, updateQty, removeItem } = useCart();
+  const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
+    show: false,
+    message: "",
+  });
 
   if (items.length === 0) {
     return (
@@ -94,9 +101,25 @@ export default function CartPage() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() =>
-                          updateQty(item.productId, item.spec, item.quantity + 1)
-                        }
+                        onClick={() => {
+                          const product = getProductById(item.productId);
+                          const max = product?.maxQuantity;
+                          if (max && max > 0) {
+                            const currentQty = items
+                              .filter((i) => i.productId === item.productId)
+                              .reduce((sum, i) => sum + i.quantity, 0);
+                            if (currentQty + 1 > max) {
+                              setLimitAlert({
+                                show: true,
+                                message:
+                                  product?.limitMessage?.trim() ||
+                                  `该商品每人限购 ${max} 件`,
+                              });
+                              return;
+                            }
+                          }
+                          updateQty(item.productId, item.spec, item.quantity + 1);
+                        }}
                         aria-label="增加数量"
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90"
                       >
@@ -127,6 +150,13 @@ export default function CartPage() {
           </button>
         </div>
       </div>
+
+      {limitAlert.show && (
+        <LimitAlertModal
+          message={limitAlert.message}
+          onClose={() => setLimitAlert({ show: false, message: "" })}
+        />
+      )}
     </div>
   );
 }

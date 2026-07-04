@@ -19,6 +19,8 @@ interface FormState {
   description: string;
   category: string;
   hot: boolean;
+  maxQuantity: string;
+  limitMessage: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -29,6 +31,8 @@ const EMPTY_FORM: FormState = {
   description: "",
   category: "",
   hot: false,
+  maxQuantity: "",
+  limitMessage: "",
 };
 
 function toForm(p: Product): FormState {
@@ -40,6 +44,8 @@ function toForm(p: Product): FormState {
     description: p.description,
     category: p.category,
     hot: p.hot,
+    maxQuantity: p.maxQuantity ? String(p.maxQuantity) : "",
+    limitMessage: p.limitMessage ?? "",
   };
 }
 
@@ -97,6 +103,9 @@ export default function ProductForm({
       window.alert("请先添加并选择一个分类");
       return;
     }
+    const maxQuantityNum = form.maxQuantity.trim()
+      ? Number(form.maxQuantity.trim())
+      : undefined;
     const input: ProductInput = {
       name: form.name.trim(),
       nameEn: form.nameEn.trim(),
@@ -105,6 +114,11 @@ export default function ProductForm({
       category: form.category,
       description: form.description.trim(),
       hot: form.hot,
+      maxQuantity:
+        maxQuantityNum !== undefined && maxQuantityNum > 0
+          ? maxQuantityNum
+          : undefined,
+      limitMessage: form.limitMessage.trim() || undefined,
     };
     if (isEdit && initial) {
       updateProduct(initial.id, input);
@@ -190,6 +204,25 @@ export default function ProductForm({
           </option>
         ))}
       </select>
+
+      <label className={`mt-3 ${labelCls}`}>购买数量上限</label>
+      <input
+        type="number"
+        min={1}
+        value={form.maxQuantity}
+        onChange={(e) => update("maxQuantity", e.target.value)}
+        placeholder="留空表示不限制"
+        className={inputCls}
+      />
+
+      <label className={`mt-3 ${labelCls}`}>达到上限提醒语</label>
+      <input
+        type="text"
+        value={form.limitMessage}
+        onChange={(e) => update("limitMessage", e.target.value)}
+        placeholder="例如：每人限购 5 件哦"
+        className={inputCls}
+      />
 
       <label className={`mt-3 ${labelCls}`}>首页热门</label>
       <button

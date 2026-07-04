@@ -1,18 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useCart, useOrders } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "@/components/ProductImage";
+import ReceiptModal from "@/components/receipt/ReceiptModal";
 import type { Order } from "@/lib/types";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalAmount, clearCart } = useCart();
   const { addOrder } = useOrders();
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
 
-  if (items.length === 0) {
+  if (items.length === 0 && !lastOrder) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-site flex-col items-center justify-center px-6 py-20 text-center md:px-8">
         <p className="text-muted">购物车是空的，先去挑点永远收不到的好物吧</p>
@@ -36,7 +39,7 @@ export default function CheckoutPage() {
     };
     addOrder(order);
     clearCart();
-    router.push(`/receipt/${order.id}`);
+    setLastOrder(order);
   }
 
   return (
@@ -103,6 +106,13 @@ export default function CheckoutPage() {
           </p>
         </div>
       </div>
+
+      {lastOrder && (
+        <ReceiptModal
+          order={lastOrder}
+          onClose={() => setLastOrder(null)}
+        />
+      )}
     </div>
   );
 }

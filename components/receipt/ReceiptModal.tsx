@@ -1,0 +1,81 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Printer, X, FileText } from "lucide-react";
+import ReceiptContent from "./ReceiptContent";
+import type { Order } from "@/lib/types";
+
+interface ReceiptModalProps {
+  order: Order;
+  onClose: () => void;
+}
+
+export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  function handlePrint() {
+    window.print();
+  }
+
+  function handleClose() {
+    onClose();
+    router.push(`/receipt/${order.id}`);
+  }
+
+  return (
+    <div
+      className="receipt-modal-overlay fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
+      onClick={handleClose}
+    >
+      <div
+        className="receipt-modal-panel w-full max-w-xl rounded-3xl bg-cream p-4 shadow-float sm:p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="receipt-modal-header mb-4 flex items-center justify-between no-print">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-light">
+              <FileText size={18} className="text-accent" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-ink">账单已生成</h2>
+              <p className="text-xs text-muted">订单提交成功，请查收</p>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-card transition hover:shadow-soft"
+            aria-label="关闭"
+          >
+            <X size={16} className="text-ink" />
+          </button>
+        </div>
+
+        <ReceiptContent order={order} />
+
+        <div className="receipt-modal-footer mt-4 flex items-center gap-3 no-print">
+          <button
+            onClick={handlePrint}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2.5 text-sm font-bold text-white transition hover:bg-accent-dark"
+          >
+            <Printer size={16} />
+            保存账单
+          </button>
+          <button
+            onClick={handleClose}
+            className="flex flex-1 items-center justify-center rounded-full bg-white py-2.5 text-sm font-bold text-ink shadow-card transition hover:shadow-soft"
+          >
+            完成
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

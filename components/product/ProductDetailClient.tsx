@@ -8,6 +8,7 @@ import { getProductById } from "@/lib/product-store";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "@/components/ProductImage";
+import LimitAlertModal from "@/components/LimitAlertModal";
 import type { Product } from "@/lib/types";
 
 interface ProductDetailClientProps {
@@ -16,11 +17,15 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ id }: ProductDetailClientProps) {
   const router = useRouter();
-  const { addItem } = useCart();
+  const { items, addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [spec, setSpec] = useState("");
   const [added, setAdded] = useState(false);
+  const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
+    show: false,
+    message: "",
+  });
 
   useEffect(() => {
     const p = getProductById(id);
@@ -31,6 +36,20 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
 
   const handleAdd = () => {
     if (!product) return;
+    const max = product.maxQuantity;
+    if (max && max > 0) {
+      const currentQty = items
+        .filter((i) => i.productId === product.id)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      if (currentQty + 1 > max) {
+        setLimitAlert({
+          show: true,
+          message:
+            product.limitMessage?.trim() || `该商品每人限购 ${max} 件`,
+        });
+        return;
+      }
+    }
     addItem({
       productId: product.id,
       shopId: product.shopId,
@@ -111,10 +130,6 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
           {product.nameEn && (
             <p className="mt-1 text-sm text-muted">{product.nameEn}</p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted">
-            <span>已售 {product.sales}</span>
-          </div>
-
           <div className="mt-6">
             <h2 className="mb-3 text-sm font-bold text-ink">规格</h2>
             <div className="flex flex-wrap gap-2">
@@ -168,6 +183,12 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
         </div>
       </div>
 
+      {limitAlert.show && (
+        <LimitAlertModal
+          message={limitAlert.message}
+          onClose={() => setLimitAlert({ show: false, message: "" })}
+        />
+      )}
     </div>
   );
 }

@@ -16,6 +16,8 @@ export interface ProductInput {
   description: string;
   specs?: string[];
   hot?: boolean;
+  maxQuantity?: number;
+  limitMessage?: string;
 }
 
 /** 客户端读取：localStorage 有就用 localStorage 全量列表，否则为空数组 */
@@ -75,6 +77,8 @@ export function addProduct(input: ProductInput): Product {
     specs: input.specs ?? ["默认"],
     sales: 0,
     imagePrompt: "",
+    maxQuantity: input.maxQuantity,
+    limitMessage: input.limitMessage?.trim() || undefined,
   };
   list.push(product);
   writeAll(list);

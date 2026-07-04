@@ -34,6 +34,8 @@ export interface Product {
   specs: string[];
   sales: number;
   imagePrompt: string;
+  maxQuantity?: number; // 购买数量上限（未设置或 0 表示不限制）
+  limitMessage?: string; // 达到上限时的自定义提示语
 }
 
 export interface CartItem {

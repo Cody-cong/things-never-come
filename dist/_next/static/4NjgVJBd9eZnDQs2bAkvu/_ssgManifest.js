@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fcategory\u002F[name]","\u002Fproduct\u002F[id]","\u002Freceipt\u002F[orderId]","\u002Fshop\u002F[id]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

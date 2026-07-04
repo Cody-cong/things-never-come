@@ -1,7 +1,7 @@
 import CategoryListClient from "@/components/category/CategoryListClient";
 
 export async function generateStaticParams() {
-  return [{ name: "placeholder" }];
+  return [{ name: "placeholder" }, { name: "ALL" }];
 }
 
 export default function CategoryPage({ params }: { params: { name: string } }) {
