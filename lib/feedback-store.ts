@@ -8,6 +8,11 @@ export interface Feedback {
 
 /**
  * 反馈持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
+ *
+ * 同步策略：
+ * - 读取时合并本地与云端，本地数据不会被云端覆盖。
+ * - 本地有而云端没有的反馈会自动补回云端（修复历史数据）。
+ * - 新增/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
  */
 const KEY = "gnc_feedback_v1";
 
@@ -63,16 +68,41 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Feedback[]> {
-  if (isSupabaseEnabled()) {
-    try {
-      const list = await readRemote();
-      writeLocal(list);
-      return list;
-    } catch (e) {
-      console.warn("[feedback-store] 读取 Supabase 失败，回退到 localStorage", e);
+  const local = readLocal();
+  if (!isSupabaseEnabled()) return local;
+
+  try {
+    const remote = await readRemote();
+    const remoteMap = new Map(remote.map((f) => [f.id, f]));
+    const localMap = new Map(local.map((f) => [f.id, f]));
+
+    // 合并：以本地为基准，补充云端独有的反馈，避免本地数据被覆盖。
+    const merged = [...local];
+    for (const f of remote) {
+      if (!localMap.has(f.id)) {
+        merged.push(f);
+      }
     }
+
+    // 去重并排序
+    const unique = Array.from(new Map(merged.map((f) => [f.id, f])).values());
+    unique.sort((a, b) => b.createdAt - a.createdAt);
+    writeLocal(unique);
+
+    // 把本地有但云端没有的反馈补回云端（修复之前同步失败的数据）。
+    for (const f of unique) {
+      if (!remoteMap.has(f.id)) {
+        await writeRemoteRow(f).catch((e) => {
+          console.warn("[feedback-store] 补同步反馈失败", f.id, e);
+        });
+      }
+    }
+
+    return unique;
+  } catch (e) {
+    console.warn("[feedback-store] 读取 Supabase 失败，回退到 localStorage", e);
+    return local;
   }
-  return readLocal();
 }
 
 /** 返回全部反馈，按时间倒序 */

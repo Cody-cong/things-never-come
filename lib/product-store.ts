@@ -3,6 +3,11 @@ import { supabase, isSupabaseEnabled, rowToProduct, productToRow } from "./supab
 
 /**
  * 商品持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
+ *
+ * 同步策略：
+ * - 读取时合并本地与云端，本地数据不会被云端覆盖。
+ * - 本地有而云端没有的商品会自动补回云端（修复历史数据）。
+ * - 新增/更新/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
  */
 const KEY = "gnc_products_v1";
 
@@ -63,16 +68,36 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Product[]> {
-  if (isSupabaseEnabled()) {
-    try {
-      const list = await readRemote();
-      writeLocal(list);
-      return list;
-    } catch (e) {
-      console.warn("[product-store] 读取 Supabase 失败，回退到 localStorage", e);
+  const local = readLocal();
+  if (!isSupabaseEnabled()) return local;
+
+  try {
+    const remote = await readRemote();
+    const remoteMap = new Map(remote.map((p) => [p.id, p]));
+    const localMap = new Map(local.map((p) => [p.id, p]));
+
+    // 合并：以本地为基准，补充云端独有的商品，避免本地数据被覆盖。
+    const merged = [...local];
+    for (const p of remote) {
+      if (!localMap.has(p.id)) merged.push(p);
     }
+
+    writeLocal(merged);
+
+    // 把本地有但云端没有的商品补回云端（修复之前同步失败的数据）。
+    for (const p of merged) {
+      if (!remoteMap.has(p.id)) {
+        await writeRemote(p).catch((e) => {
+          console.warn("[product-store] 补同步商品失败", p.id, e);
+        });
+      }
+    }
+
+    return merged;
+  } catch (e) {
+    console.warn("[product-store] 读取 Supabase 失败，回退到 localStorage", e);
+    return local;
   }
-  return readLocal();
 }
 
 async function writeAll(list: Product[]): Promise<void> {
@@ -86,57 +111,19 @@ export async function getAllProducts(): Promise<Product[]> {
 
 /** 按 id 查询商品 */
 export async function getProductById(id: string): Promise<Product | undefined> {
-  if (isSupabaseEnabled() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data ? rowToProduct(data) : undefined;
-    } catch (e) {
-      console.warn("[product-store] 按 ID 读取 Supabase 失败，回退到 localStorage", e);
-    }
-  }
-  return readLocal().find((p) => p.id === id);
+  const list = await readAll();
+  return list.find((p) => p.id === id);
 }
 
 /** 返回热门商品（hot = true） */
 export async function getHotProducts(): Promise<Product[]> {
-  if (isSupabaseEnabled() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("hot", true)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []).map(rowToProduct);
-    } catch (e) {
-      console.warn("[product-store] 读取热门商品失败，回退到 localStorage", e);
-    }
-  }
-  return readLocal().filter((p) => p.hot);
+  const list = await readAll();
+  return list.filter((p) => p.hot);
 }
 
 /** 按分类查询商品，category 为 "ALL" 时返回全部 */
 export async function getProductsByCategory(category: string): Promise<Product[]> {
-  if (isSupabaseEnabled() && supabase) {
-    try {
-      const query = supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-      const { data, error } =
-        category === "ALL" ? await query : await query.eq("category", category);
-      if (error) throw error;
-      return (data ?? []).map(rowToProduct);
-    } catch (e) {
-      console.warn("[product-store] 按分类读取失败，回退到 localStorage", e);
-    }
-  }
-  const list = readLocal();
+  const list = await readAll();
   if (category === "ALL") return list;
   return list.filter((p) => p.category === category);
 }

@@ -8,6 +8,11 @@ export interface HomeFaq {
 
 /**
  * FAQ 持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
+ *
+ * 同步策略：
+ * - 读取时以云端为准，但不会清空本地默认值（首次使用）。
+ * - 如果云端为空且本地有默认值，会把默认值上传到云端作为初始数据。
+ * - 管理端编辑后，所有客户端都会拉取到最新云端数据。
  */
 const KEY = "gnc_home_faqs_v1";
 
@@ -94,18 +99,25 @@ async function clearRemote(): Promise<void> {
 }
 
 async function readAll(): Promise<HomeFaq[]> {
-  if (isSupabaseEnabled()) {
-    try {
-      const list = await readRemote();
-      writeLocal(list);
-      // 远端为空且本地也是默认值时，保持默认值显示（首次使用）
-      if (list.length === 0) return readLocal();
-      return list;
-    } catch (e) {
-      console.warn("[faq-store] 读取 Supabase 失败，回退到 localStorage", e);
+  const local = readLocal();
+  if (!isSupabaseEnabled()) return local;
+
+  try {
+    const remote = await readRemote();
+
+    // 云端为空且本地有默认值时，把默认值作为初始数据上传到云端。
+    if (remote.length === 0 && local.length > 0) {
+      await Promise.all(local.map((f, i) => writeRemoteRow(f, i)));
+      return local;
     }
+
+    // 否则以云端为准，并把最新数据缓存到本地。
+    writeLocal(remote);
+    return remote;
+  } catch (e) {
+    console.warn("[faq-store] 读取 Supabase 失败，回退到 localStorage", e);
+    return local;
   }
-  return readLocal();
 }
 
 /** 返回当前生效的全部 FAQ */
@@ -158,7 +170,6 @@ export async function deleteFaq(id: string): Promise<void> {
   writeLocal(list);
   try {
     await removeRemote(id);
-    // 重新写入剩余 FAQ 以更新 position
     await Promise.all(list.map((f, i) => writeRemoteRow(f, i)));
   } catch (e) {
     console.warn("[faq-store] 删除 FAQ 同步到 Supabase 失败", e);
@@ -170,9 +181,7 @@ export async function resetFaqs(): Promise<void> {
   writeLocal(DEFAULT_FAQS);
   try {
     await clearRemote();
-    await Promise.all(
-      DEFAULT_FAQS.map((f, i) => writeRemoteRow(f, i))
-    );
+    await Promise.all(DEFAULT_FAQS.map((f, i) => writeRemoteRow(f, i)));
   } catch (e) {
     console.warn("[faq-store] 重置 FAQ 同步到 Supabase 失败", e);
   }

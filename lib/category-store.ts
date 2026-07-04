@@ -2,6 +2,11 @@ import { supabase, isSupabaseEnabled } from "./supabase";
 
 /**
  * 分类持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
+ *
+ * 同步策略：
+ * - 读取时合并本地与云端，本地数据不会被云端覆盖。
+ * - 本地有而云端没有的分类会自动补回云端。
+ * - 新增/更新/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
  */
 const KEY = "gnc_categories_v1";
 
@@ -36,8 +41,6 @@ async function readRemote(): Promise<string[]> {
 async function syncRemote(list: string[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
 
-  // 增量同步：读取远程现有分类，删除多余的，插入新增的，保留不变的。
-  // 比“先删光再全量插入”更安全，可降低并发覆盖导致的数据丢失风险。
   const remoteNames = await readRemote();
   const localSet = new Set(list);
   const remoteSet = new Set(remoteNames);
@@ -62,16 +65,20 @@ async function syncRemote(list: string[]): Promise<void> {
 }
 
 async function readAll(): Promise<string[]> {
-  if (isSupabaseEnabled()) {
-    try {
-      const list = await readRemote();
-      writeLocal(list);
-      return list;
-    } catch (e) {
-      console.warn("[category-store] 读取 Supabase 失败，回退到 localStorage", e);
-    }
+  const local = readLocal();
+  if (!isSupabaseEnabled()) return local;
+
+  try {
+    const remote = await readRemote();
+    // 合并本地与云端，保留顺序：本地在前，补充云端独有的。
+    const merged = Array.from(new Set([...local, ...remote]));
+    writeLocal(merged);
+    await syncRemote(merged);
+    return merged;
+  } catch (e) {
+    console.warn("[category-store] 读取 Supabase 失败，回退到 localStorage", e);
+    return local;
   }
-  return readLocal();
 }
 
 async function writeAll(list: string[]): Promise<void> {
