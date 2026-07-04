@@ -32,10 +32,13 @@ export default function HomePage() {
 
   useEffect(() => {
     async function load() {
-      const hot = await getHotProducts();
+      const [hot, faqList] = await Promise.all([
+        getHotProducts(),
+        getFaqs(),
+      ]);
       setProducts(hot.slice(0, 6));
       setNickname(getUserProfile().name);
-      setFaqs(getFaqs());
+      setFaqs(faqList);
       setShowOnboarding(!hasUserProfile());
       setLoading(false);
     }
@@ -49,11 +52,11 @@ export default function HomePage() {
     }
   };
 
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = feedbackText.trim();
     if (!text) return;
-    addFeedback(text);
+    await addFeedback(text);
     setFeedbackText("");
     setFeedbackNotice("反馈已提交，感谢你的建议！");
   };

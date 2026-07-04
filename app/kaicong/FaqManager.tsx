@@ -22,23 +22,31 @@ export default function FaqManager() {
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
 
-  function refresh() {
-    setList(getFaqs());
+  const [saving, setSaving] = useState(false);
+
+  async function refresh() {
+    setList(await getFaqs());
   }
 
   useEffect(() => {
     refresh();
   }, []);
 
-  function handleAdd() {
+  async function handleAdd() {
+    if (saving) return;
     const q = newQ.trim();
     const a = newA.trim();
     if (!q || !a) return;
-    addFaq(q, a);
-    setNewQ("");
-    setNewA("");
-    setAdding(false);
-    refresh();
+    setSaving(true);
+    try {
+      await addFaq(q, a);
+      setNewQ("");
+      setNewA("");
+      setAdding(false);
+      await refresh();
+    } finally {
+      setSaving(false);
+    }
   }
 
   function startEdit(f: HomeFaq) {
@@ -47,25 +55,43 @@ export default function FaqManager() {
     setEditA(f.a);
   }
 
-  function handleSaveEdit(id: string) {
+  async function handleSaveEdit(id: string) {
+    if (saving) return;
     const q = editQ.trim();
     const a = editA.trim();
     if (!q || !a) return;
-    updateFaq(id, { q, a });
-    setEditingId(null);
-    refresh();
+    setSaving(true);
+    try {
+      await updateFaq(id, { q, a });
+      setEditingId(null);
+      await refresh();
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete(id: string) {
-    deleteFaq(id);
-    setConfirmingDelete(null);
-    refresh();
+  async function handleDelete(id: string) {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await deleteFaq(id);
+      setConfirmingDelete(null);
+      await refresh();
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleReset() {
-    resetFaqs();
-    setConfirmingReset(false);
-    refresh();
+  async function handleReset() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await resetFaqs();
+      setConfirmingReset(false);
+      await refresh();
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inputCls =

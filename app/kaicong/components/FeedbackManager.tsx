@@ -12,19 +12,26 @@ function formatTime(ts: number): string {
 export default function FeedbackManager() {
   const [list, setList] = useState<Feedback[]>([]);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  function refresh() {
-    setList(getFeedbacks());
+  async function refresh() {
+    setList(await getFeedbacks());
   }
 
   useEffect(() => {
     refresh();
   }, []);
 
-  function handleDelete(id: string) {
-    deleteFeedback(id);
-    setConfirming(null);
-    refresh();
+  async function handleDelete(id: string) {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await deleteFeedback(id);
+      setConfirming(null);
+      await refresh();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
