@@ -1,23 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
-interface ConfettiProps {
-  /** 持续时间（毫秒），默认 3000 */
-  duration?: number;
-}
-
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  color: string;
-  rotation: number;
-  vr: number;
-  life: number;
-}
+import { useMemo } from "react";
 
 const COLORS = [
   "#ff6b6b",
@@ -32,95 +15,75 @@ const COLORS = [
   "#ee5a6f",
 ];
 
-/** 轻量 Canvas 礼花效果，无需第三方依赖 */
-export default function Confetti({ duration = 3000 }: ConfettiProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+interface Piece {
+  left: number;
+  delay: number;
+  duration: number;
+  color: string;
+  size: number;
+  rotate: number;
+  drift: number;
+}
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    function resize() {
-      if (!canvas) return;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
-      ctx?.scale(dpr, dpr);
-    }
-    resize();
-    window.addEventListener("resize", resize);
-
-    const particles: Particle[] = [];
-    const particleCount = 80;
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-
-    for (let i = 0; i < particleCount; i++) {
-      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;
-      const speed = 3 + Math.random() * 6;
-      particles.push({
-        x: centerX,
-        y: centerY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2,
-        size: 6 + Math.random() * 6,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        rotation: Math.random() * Math.PI * 2,
-        vr: (Math.random() - 0.5) * 0.3,
-        life: 1,
-      });
-    }
-
-    let raf = 0;
-    const startTime = Date.now();
-
-    function animate() {
-      if (!ctx || !canvas) return;
-      const elapsed = Date.now() - startTime;
-      const progress = elapsed / duration;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (const p of particles) {
-        p.vy += 0.15; // 重力
-        p.vx *= 0.99; // 阻力
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rotation += p.vr;
-        p.life = Math.max(0, 1 - progress);
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-        ctx.restore();
-      }
-
-      if (progress < 1) {
-        raf = requestAnimationFrame(animate);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-    animate();
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-    };
-  }, [duration]);
+/** DOM + CSS 礼花效果，无需 canvas，兼容性更好 */
+export default function Confetti() {
+  const pieces = useMemo<Piece[]>(() => {
+    return Array.from({ length: 60 }, () => ({
+      left: Math.random() * 100,
+      delay: Math.random() * 0.6,
+      duration: 2.5 + Math.random() * 2,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      size: 8 + Math.random() * 8,
+      rotate: Math.random() * 360,
+      drift: (Math.random() - 0.5) * 200,
+    }));
+  }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-[80]"
+    <div
+      className="pointer-events-none fixed inset-0 z-[80] overflow-hidden"
       aria-hidden="true"
-    />
+    >
+      {pieces.map((p, i) => (
+        <div
+          key={i}
+          className="confetti-piece"
+          style={
+            {
+              left: `${p.left}%`,
+              width: `${p.size}px`,
+              height: `${p.size * 0.5}px`,
+              backgroundColor: p.color,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+              "--rotate": `${p.rotate}deg`,
+              "--drift": `${p.drift}px`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+      <style jsx>{`
+        .confetti-piece {
+          position: absolute;
+          top: -20px;
+          border-radius: 2px;
+          animation-name: confetti-fall;
+          animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          animation-fill-mode: forwards;
+          transform: rotate(var(--rotate));
+        }
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(-20px) translateX(0) rotate(var(--rotate));
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(110vh) translateX(var(--drift))
+              rotate(calc(var(--rotate) + 720deg));
+            opacity: 0.8;
+          }
+        }
+      `}</style>
+    </div>
   );
 }

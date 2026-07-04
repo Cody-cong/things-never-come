@@ -1,6 +1,7 @@
 export interface UserProfile {
   name: string;
   avatar: string;
+  address: string;
 }
 
 const KEY = "gnc_user_profile_v1";
@@ -16,9 +17,12 @@ export const AVATAR_OPTIONS = [
   `${AVATAR_BASE}/军曹keroro头像来啦hhhhh_5_Luna Wallpaper Lab_来自小红书网页版.jpg`,
 ];
 
+export const DEFAULT_ADDRESS = "trae创意小镇";
+
 export const DEFAULT_PROFILE: UserProfile = {
   name: "Zara",
   avatar: AVATAR_OPTIONS[1],
+  address: DEFAULT_ADDRESS,
 };
 
 function read(): UserProfile | null {
@@ -26,9 +30,13 @@ function read(): UserProfile | null {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as UserProfile;
+    const parsed = JSON.parse(raw) as Partial<UserProfile>;
     if (parsed && typeof parsed.name === "string" && typeof parsed.avatar === "string") {
-      return parsed;
+      return {
+        name: parsed.name,
+        avatar: parsed.avatar,
+        address: typeof parsed.address === "string" ? parsed.address : DEFAULT_ADDRESS,
+      };
     }
     return null;
   } catch {
@@ -49,7 +57,7 @@ export function getUserProfile(): UserProfile {
   if (typeof window !== "undefined") {
     const legacy = localStorage.getItem(LEGACY_NICKNAME_KEY);
     if (legacy) {
-      return { name: legacy, avatar: DEFAULT_PROFILE.avatar };
+      return { name: legacy, avatar: DEFAULT_PROFILE.avatar, address: DEFAULT_ADDRESS };
     }
   }
 
@@ -63,6 +71,7 @@ export function setUserProfile(profile: UserProfile): void {
     JSON.stringify({
       name: profile.name.trim() || DEFAULT_PROFILE.name,
       avatar: profile.avatar || DEFAULT_PROFILE.avatar,
+      address: profile.address.trim() || DEFAULT_ADDRESS,
     })
   );
 }

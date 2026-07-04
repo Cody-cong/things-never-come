@@ -1,22 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { MapPin } from "lucide-react";
 import {
   getUserProfile,
   setUserProfile,
   AVATAR_OPTIONS,
   DEFAULT_PROFILE,
+  DEFAULT_ADDRESS,
 } from "@/lib/profile-store";
 
 export default function ProfilePage() {
   const [name, setName] = useState(DEFAULT_PROFILE.name);
   const [avatar, setAvatar] = useState(DEFAULT_PROFILE.avatar);
+  const [address, setAddress] = useState(DEFAULT_ADDRESS);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const profile = getUserProfile();
     setName(profile.name);
     setAvatar(profile.avatar);
+    setAddress(profile.address);
   }, []);
 
   useEffect(() => {
@@ -28,13 +32,20 @@ export default function ProfilePage() {
   const handleNameBlur = () => {
     const trimmed = name.trim() || DEFAULT_PROFILE.name;
     setName(trimmed);
-    setUserProfile({ name: trimmed, avatar });
+    setUserProfile({ name: trimmed, avatar, address });
     setSaved(true);
   };
 
   const handleAvatarChange = (src: string) => {
     setAvatar(src);
-    setUserProfile({ name: name.trim() || DEFAULT_PROFILE.name, avatar: src });
+    setUserProfile({ name: name.trim() || DEFAULT_PROFILE.name, avatar: src, address });
+    setSaved(true);
+  };
+
+  const handleAddressBlur = () => {
+    const trimmed = address.trim() || DEFAULT_ADDRESS;
+    setAddress(trimmed);
+    setUserProfile({ name: name.trim() || DEFAULT_PROFILE.name, avatar, address: trimmed });
     setSaved(true);
   };
 
@@ -86,6 +97,28 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* 地址 */}
+      <div className="mt-6 rounded-2xl bg-white p-6 shadow-card">
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cream">
+            <MapPin size={20} className="text-accent" />
+          </div>
+          <label htmlFor="address-input" className="text-base font-semibold text-ink">
+            收货地址
+          </label>
+        </div>
+        <input
+          id="address-input"
+          type="text"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          onBlur={handleAddressBlur}
+          placeholder={DEFAULT_ADDRESS}
+          className="mt-3 w-full rounded-2xl border border-blush bg-cream/50 px-4 py-2.5 text-sm text-ink outline-none focus:border-accent"
+        />
+        <p className="mt-2 text-xs text-muted">失焦后自动保存</p>
       </div>
 
       {saved && (

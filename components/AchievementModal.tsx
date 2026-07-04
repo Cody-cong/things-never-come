@@ -25,7 +25,7 @@ export default function AchievementModal({
 
   return (
     <>
-      <Confetti duration={3000} />
+      <Confetti />
       <div
         className="fixed inset-0 z-[75] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
         role="dialog"

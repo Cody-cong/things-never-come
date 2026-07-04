@@ -5,6 +5,7 @@ import {
   setUserProfile,
   DEFAULT_PROFILE,
   AVATAR_OPTIONS,
+  DEFAULT_ADDRESS,
 } from "@/lib/profile-store";
 
 interface OnboardingModalProps {
@@ -28,7 +29,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   function handleConfirm() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setUserProfile({ name: trimmed, avatar });
+    setUserProfile({ name: trimmed, avatar, address: DEFAULT_ADDRESS });
     onComplete();
   }
 
