@@ -1,4 +1,5 @@
 import { supabase, isSupabaseEnabled } from "./supabase";
+import { readLocal, writeLocal, isValidArray } from "./storage-utils";
 
 /**
  * 分类持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
@@ -10,22 +11,9 @@ import { supabase, isSupabaseEnabled } from "./supabase";
  */
 const KEY = "gnc_categories_v1";
 
-function readLocal(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === null) return [];
-    const list = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocal(list: string[]): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(KEY, JSON.stringify(list));
-  }
+function parseLocalCategories(): string[] {
+  const value = readLocal<unknown>(KEY, []);
+  return isValidArray<string>(value) ? value.filter((c) => typeof c === "string") : [];
 }
 
 async function readRemote(): Promise<string[]> {
@@ -65,14 +53,14 @@ async function syncRemote(list: string[]): Promise<void> {
 }
 
 async function readAll(): Promise<string[]> {
-  const local = readLocal();
+  const local = parseLocalCategories();
   if (!isSupabaseEnabled()) return local;
 
   try {
     const remote = await readRemote();
     // 合并本地与云端，保留顺序：本地在前，补充云端独有的。
     const merged = Array.from(new Set([...local, ...remote]));
-    writeLocal(merged);
+    writeLocal(KEY, merged);
     await syncRemote(merged);
     return merged;
   } catch (e) {
@@ -82,7 +70,7 @@ async function readAll(): Promise<string[]> {
 }
 
 async function writeAll(list: string[]): Promise<void> {
-  writeLocal(list);
+  writeLocal(KEY, list);
   try {
     await syncRemote(list);
   } catch (e) {

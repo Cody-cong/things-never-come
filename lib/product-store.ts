@@ -1,5 +1,6 @@
 import type { Product } from "./types";
 import { supabase, isSupabaseEnabled, rowToProduct, productToRow } from "./supabase";
+import { readLocal, writeLocal, isValidArray } from "./storage-utils";
 
 /**
  * 商品持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
@@ -26,21 +27,9 @@ export interface ProductInput {
   limitMessage?: string;
 }
 
-function readLocal(): Product[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === null) return [];
-    const list = JSON.parse(raw) as Product[];
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocal(list: Product[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(list));
+function parseLocalProducts(): Product[] {
+  const value = readLocal<unknown>(KEY, []);
+  return isValidArray<Product>(value) ? value : [];
 }
 
 async function readRemote(): Promise<Product[]> {
@@ -68,7 +57,7 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Product[]> {
-  const local = readLocal();
+  const local = parseLocalProducts();
   if (!isSupabaseEnabled()) return local;
 
   try {
@@ -82,15 +71,18 @@ async function readAll(): Promise<Product[]> {
       if (!localMap.has(p.id)) merged.push(p);
     }
 
-    writeLocal(merged);
+    writeLocal(KEY, merged);
 
-    // 把本地有但云端没有的商品补回云端（修复之前同步失败的数据）。
-    for (const p of merged) {
-      if (!remoteMap.has(p.id)) {
-        await writeRemote(p).catch((e) => {
-          console.warn("[product-store] 补同步商品失败", p.id, e);
-        });
-      }
+    // 把本地有但云端没有的商品并行补回云端（修复之前同步失败的数据）。
+    const missing = merged.filter((p) => !remoteMap.has(p.id));
+    if (missing.length > 0) {
+      await Promise.all(
+        missing.map((p) =>
+          writeRemote(p).catch((e) => {
+            console.warn("[product-store] 补同步商品失败", p.id, e);
+          })
+        )
+      );
     }
 
     return merged;
@@ -98,10 +90,6 @@ async function readAll(): Promise<Product[]> {
     console.warn("[product-store] 读取 Supabase 失败，回退到 localStorage", e);
     return local;
   }
-}
-
-async function writeAll(list: Product[]): Promise<void> {
-  writeLocal(list);
 }
 
 /** 返回当前生效的全部商品 */
@@ -149,7 +137,7 @@ export async function addProduct(input: ProductInput): Promise<Product> {
     limitMessage: input.limitMessage?.trim() || undefined,
   };
   localList.push(product);
-  await writeAll(localList);
+  writeLocal(KEY, localList);
   try {
     await writeRemote(product);
   } catch (e) {
@@ -167,7 +155,7 @@ export async function updateProduct(
   const idx = localList.findIndex((p) => p.id === id);
   if (idx < 0) return;
   localList[idx] = { ...localList[idx], ...patch };
-  await writeAll(localList);
+  writeLocal(KEY, localList);
   try {
     await writeRemote(localList[idx]);
   } catch (e) {
@@ -178,7 +166,7 @@ export async function updateProduct(
 /** 删除商品：按 id 过滤掉，写入云端和本地 */
 export async function deleteProduct(id: string): Promise<void> {
   const localList = (await readAll()).filter((p) => p.id !== id);
-  await writeAll(localList);
+  writeLocal(KEY, localList);
   try {
     await removeRemote(id);
   } catch (e) {
@@ -188,7 +176,7 @@ export async function deleteProduct(id: string): Promise<void> {
 
 /** 一键删除所有商品：写入空数组并清空云端 */
 export async function deleteAllProducts(): Promise<void> {
-  await writeAll([]);
+  writeLocal(KEY, []);
   if (isSupabaseEnabled() && supabase) {
     try {
       const { error } = await supabase.from("products").delete().neq("id", "");

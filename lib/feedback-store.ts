@@ -1,4 +1,5 @@
 import { supabase, isSupabaseEnabled } from "./supabase";
+import { readLocal, writeLocal, isValidArray } from "./storage-utils";
 
 export interface Feedback {
   id: string;
@@ -16,22 +17,9 @@ export interface Feedback {
  */
 const KEY = "gnc_feedback_v1";
 
-function readLocal(): Feedback[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === null) return [];
-    const list = JSON.parse(raw) as Feedback[];
-    return Array.isArray(list) ? list : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocal(list: Feedback[]): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(KEY, JSON.stringify(list));
-  }
+function parseLocalFeedbacks(): Feedback[] {
+  const value = readLocal<unknown>(KEY, []);
+  return isValidArray<Feedback>(value) ? value : [];
 }
 
 async function readRemote(): Promise<Feedback[]> {
@@ -68,7 +56,7 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Feedback[]> {
-  const local = readLocal();
+  const local = parseLocalFeedbacks();
   if (!isSupabaseEnabled()) return local;
 
   try {
@@ -87,15 +75,18 @@ async function readAll(): Promise<Feedback[]> {
     // 去重并排序
     const unique = Array.from(new Map(merged.map((f) => [f.id, f])).values());
     unique.sort((a, b) => b.createdAt - a.createdAt);
-    writeLocal(unique);
+    writeLocal(KEY, unique);
 
-    // 把本地有但云端没有的反馈补回云端（修复之前同步失败的数据）。
-    for (const f of unique) {
-      if (!remoteMap.has(f.id)) {
-        await writeRemoteRow(f).catch((e) => {
-          console.warn("[feedback-store] 补同步反馈失败", f.id, e);
-        });
-      }
+    // 把本地有但云端没有的反馈并行补回云端（修复之前同步失败的数据）。
+    const missing = unique.filter((f) => !remoteMap.has(f.id));
+    if (missing.length > 0) {
+      await Promise.all(
+        missing.map((f) =>
+          writeRemoteRow(f).catch((e) => {
+            console.warn("[feedback-store] 补同步反馈失败", f.id, e);
+          })
+        )
+      );
     }
 
     return unique;
@@ -118,8 +109,8 @@ export async function addFeedback(content: string): Promise<Feedback> {
     content: content.trim(),
     createdAt: Date.now(),
   };
-  const list = [item, ...readLocal()];
-  writeLocal(list);
+  const list = [item, ...parseLocalFeedbacks()];
+  writeLocal(KEY, list);
   try {
     await writeRemoteRow(item);
   } catch (e) {
@@ -130,8 +121,8 @@ export async function addFeedback(content: string): Promise<Feedback> {
 
 /** 删除反馈 */
 export async function deleteFeedback(id: string): Promise<void> {
-  const list = readLocal().filter((f) => f.id !== id);
-  writeLocal(list);
+  const list = parseLocalFeedbacks().filter((f) => f.id !== id);
+  writeLocal(KEY, list);
   try {
     await removeRemote(id);
   } catch (e) {

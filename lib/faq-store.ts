@@ -1,4 +1,5 @@
 import { supabase, isSupabaseEnabled } from "./supabase";
+import { readLocal, writeLocal, isValidArray } from "./storage-utils";
 
 export interface HomeFaq {
   id: string;
@@ -39,22 +40,9 @@ const DEFAULT_FAQS: HomeFaq[] = [
   },
 ];
 
-function readLocal(): HomeFaq[] {
-  if (typeof window === "undefined") return DEFAULT_FAQS;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === null) return DEFAULT_FAQS;
-    const list = JSON.parse(raw) as HomeFaq[];
-    return Array.isArray(list) ? list : DEFAULT_FAQS;
-  } catch {
-    return DEFAULT_FAQS;
-  }
-}
-
-function writeLocal(list: HomeFaq[]): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(KEY, JSON.stringify(list));
-  }
+function parseLocalFaqs(): HomeFaq[] {
+  const value = readLocal<unknown>(KEY, DEFAULT_FAQS);
+  return isValidArray<HomeFaq>(value) ? value : DEFAULT_FAQS;
 }
 
 async function readRemote(): Promise<HomeFaq[]> {
@@ -99,7 +87,7 @@ async function clearRemote(): Promise<void> {
 }
 
 async function readAll(): Promise<HomeFaq[]> {
-  const local = readLocal();
+  const local = parseLocalFaqs();
   if (!isSupabaseEnabled()) return local;
 
   try {
@@ -112,7 +100,7 @@ async function readAll(): Promise<HomeFaq[]> {
     }
 
     // 否则以云端为准，并把最新数据缓存到本地。
-    writeLocal(remote);
+    writeLocal(KEY, remote);
     return remote;
   } catch (e) {
     console.warn("[faq-store] 读取 Supabase 失败，回退到 localStorage", e);
@@ -134,7 +122,7 @@ export async function addFaq(q: string, a: string): Promise<HomeFaq> {
   };
   const list = await readAll();
   list.push(faq);
-  writeLocal(list);
+  writeLocal(KEY, list);
   try {
     await writeRemoteRow(faq, list.length - 1);
   } catch (e) {
@@ -156,7 +144,7 @@ export async function updateFaq(
     ...(patch.q !== undefined ? { q: patch.q.trim() } : {}),
     ...(patch.a !== undefined ? { a: patch.a.trim() } : {}),
   };
-  writeLocal(list);
+  writeLocal(KEY, list);
   try {
     await writeRemoteRow(list[idx], idx);
   } catch (e) {
@@ -167,7 +155,7 @@ export async function updateFaq(
 /** 删除 FAQ */
 export async function deleteFaq(id: string): Promise<void> {
   const list = (await readAll()).filter((f) => f.id !== id);
-  writeLocal(list);
+  writeLocal(KEY, list);
   try {
     await removeRemote(id);
     await Promise.all(list.map((f, i) => writeRemoteRow(f, i)));
@@ -178,7 +166,7 @@ export async function deleteFaq(id: string): Promise<void> {
 
 /** 重置 FAQ 为默认 4 条 */
 export async function resetFaqs(): Promise<void> {
-  writeLocal(DEFAULT_FAQS);
+  writeLocal(KEY, DEFAULT_FAQS);
   try {
     await clearRemote();
     await Promise.all(DEFAULT_FAQS.map((f, i) => writeRemoteRow(f, i)));
