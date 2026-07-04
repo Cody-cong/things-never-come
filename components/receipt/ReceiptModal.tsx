@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Printer, X, FileText } from "lucide-react";
+import { Download, X, FileText } from "lucide-react";
+import { toPng } from "html-to-image";
 import ReceiptContent from "./ReceiptContent";
 import type { Order } from "@/lib/types";
 
@@ -13,6 +14,7 @@ interface ReceiptModalProps {
 
 export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
   const router = useRouter();
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -21,8 +23,20 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
     };
   }, []);
 
-  function handlePrint() {
-    window.print();
+  async function handleSaveImage() {
+    if (!receiptRef.current) return;
+    try {
+      const dataUrl = await toPng(receiptRef.current, {
+        pixelRatio: 2,
+        quality: 0.95,
+      });
+      const link = document.createElement("a");
+      link.download = `账单-${order.id}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      window.print();
+    }
   }
 
   function handleClose() {
@@ -58,15 +72,17 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
           </button>
         </div>
 
-        <ReceiptContent order={order} />
+        <div ref={receiptRef}>
+          <ReceiptContent order={order} />
+        </div>
 
         <div className="receipt-modal-footer mt-4 flex items-center gap-3 no-print">
           <button
-            onClick={handlePrint}
+            onClick={handleSaveImage}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2.5 text-sm font-bold text-white transition hover:bg-accent-dark"
           >
-            <Printer size={16} />
-            保存账单
+            <Download size={16} />
+            保存图片
           </button>
           <button
             onClick={handleClose}
