@@ -1,17 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart, useOrders } from "@/lib/cart-context";
 import { getProductById } from "@/lib/product-store";
 import { formatPrice } from "@/lib/utils";
+import { checkAchievements, type Achievement } from "@/lib/achievements";
 import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
 import ReceiptModal from "@/components/receipt/ReceiptModal";
+import AchievementModal from "@/components/AchievementModal";
 import { useState } from "react";
 import type { Order } from "@/lib/types";
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, totalAmount, updateQty, removeItem, clearCart } = useCart();
   const { addOrder } = useOrders();
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
@@ -20,6 +24,7 @@ export default function CartPage() {
   });
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
 
   async function handleCheckout() {
     if (submitting || items.length === 0) return;
@@ -40,6 +45,31 @@ export default function CartPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleReceiptClose() {
+    const order = lastOrder;
+    setLastOrder(null);
+    if (order) {
+      const unlocked = checkAchievements(order);
+      if (unlocked.length > 0) {
+        setAchievementQueue(unlocked);
+        return;
+      }
+    }
+    if (order) {
+      router.push(`/receipt/?orderId=${order.id}`);
+    }
+  }
+
+  function handleAchievementConfirm() {
+    setAchievementQueue((prev) => {
+      const next = prev.slice(1);
+      if (next.length === 0 && lastOrder) {
+        router.push(`/receipt/?orderId=${lastOrder.id}`);
+      }
+      return next;
+    });
   }
 
   if (items.length === 0 && !lastOrder) {
@@ -192,7 +222,15 @@ export default function CartPage() {
       {lastOrder && (
         <ReceiptModal
           order={lastOrder}
-          onClose={() => setLastOrder(null)}
+          onClose={handleReceiptClose}
+        />
+      )}
+
+      {achievementQueue.length > 0 && (
+        <AchievementModal
+          achievement={achievementQueue[0]}
+          remaining={achievementQueue.length}
+          onConfirm={handleAchievementConfirm}
         />
       )}
     </div>

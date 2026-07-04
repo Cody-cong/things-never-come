@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Download, X, FileText } from "lucide-react";
 import ReceiptContent from "./ReceiptContent";
 import type { Order } from "@/lib/types";
@@ -12,7 +11,6 @@ interface ReceiptModalProps {
 }
 
 export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
-  const router = useRouter();
   const receiptRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
 
@@ -43,15 +41,10 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
     }
   }
 
-  function handleClose() {
-    onClose();
-    router.push(`/receipt/?orderId=${order.id}`);
-  }
-
   return (
     <div
       className="receipt-modal-overlay fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
-      onClick={handleClose}
+      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="receipt-title"
@@ -73,7 +66,7 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
             </div>
           </div>
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-card transition hover:shadow-soft"
             aria-label="关闭"
           >
@@ -95,7 +88,7 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
             {saving ? "保存中…" : "保存图片"}
           </button>
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="flex flex-1 items-center justify-center rounded-full bg-white py-2.5 text-sm font-bold text-ink shadow-card transition hover:shadow-soft"
           >
             完成

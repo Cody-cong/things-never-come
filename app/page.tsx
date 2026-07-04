@@ -19,10 +19,9 @@ const STEPS = [
 ];
 
 const BENEFITS = [
-  { title: "省钱", desc: "每一单都帮你省下真金白银。" },
-  { title: "零卡路里", desc: "虚拟购物，不会增加任何实体负担。" },
-  { title: "释放多巴胺", desc: "下单瞬间的快乐，无需等待收货。" },
-  { title: "零风险", desc: "不发货、不退款、无售后烦恼。" },
+  { desc: "68%的年轻人有深夜冲动消费习惯，0 元" },
+  { desc: "全程零消费，钱包零压力，100%" },
+  { desc: "多巴胺满足，零后悔" },
 ];
 
 export default function HomePage() {
@@ -121,7 +120,7 @@ export default function HomePage() {
           <div className="mb-10 text-center">
             <h2 className="section-title">热门商品</h2>
             <p className="section-subtitle text-sm md:text-base">
-              从数码到图书，精选永远不会送达的好物。
+              精选全宇宙一切好物
             </p>
           </div>
 
@@ -168,7 +167,7 @@ export default function HomePage() {
       <section id="howto" className="section scroll-mt-24">
         <div className="mx-auto max-w-site px-6 md:px-8">
           <div className="mb-10 text-center">
-            <h2 className="section-title">如何假装购物</h2>
+            <h2 className="section-title">玩法</h2>
             <p className="section-subtitle text-sm md:text-base">
               四个简单步骤，体验一场永远不会结束的等待。
             </p>
@@ -199,14 +198,13 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             {BENEFITS.map((b, idx) => (
               <div
                 key={idx}
-                className="rounded-2xl bg-cream p-6 transition hover:shadow-soft"
+                className="rounded-2xl bg-cream p-6 text-center transition hover:shadow-soft"
               >
-                <h3 className="text-lg font-bold text-ink">{b.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{b.desc}</p>
+                <p className="text-sm leading-relaxed text-ink">{b.desc}</p>
               </div>
             ))}
           </div>
