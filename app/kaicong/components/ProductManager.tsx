@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Flame, ChevronLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Flame, ChevronLeft, Square, SquareCheck } from "lucide-react";
 import {
   getAllProducts,
   deleteProduct,
+  deleteProducts,
   deleteAllProducts,
   updateProduct,
 } from "@/lib/product-store";
@@ -20,6 +21,8 @@ export default function ProductManager() {
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmingBatchDelete, setConfirmingBatchDelete] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -42,6 +45,31 @@ export default function ProductManager() {
   async function handleDeleteAll() {
     await deleteAllProducts();
     setConfirmingDeleteAll(false);
+    refresh();
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === list.length && list.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(list.map((p) => p.id)));
+    }
+  }
+
+  async function handleBatchDelete() {
+    if (selectedIds.size === 0) return;
+    await deleteProducts(Array.from(selectedIds));
+    setSelectedIds(new Set());
+    setConfirmingBatchDelete(false);
     refresh();
   }
 
@@ -77,6 +105,35 @@ export default function ProductManager() {
           <h1 className="text-base font-semibold text-ink">商品管理</h1>
         </div>
         <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <>
+              {confirmingBatchDelete ? (
+                <>
+                  <span className="text-xs text-ink">确认删除 {selectedIds.size} 个？</span>
+                  <button
+                    onClick={handleBatchDelete}
+                    className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white"
+                  >
+                    确认
+                  </button>
+                  <button
+                    onClick={() => setConfirmingBatchDelete(false)}
+                    className="rounded-full border border-blush px-3 py-1.5 text-xs text-ink"
+                  >
+                    取消
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setConfirmingBatchDelete(true)}
+                  className="flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white"
+                >
+                  <Trash2 size={12} />
+                  删除已选 ({selectedIds.size})
+                </button>
+              )}
+            </>
+          )}
           {confirmingDeleteAll ? (
             <>
               <span className="text-xs text-ink">确认全部删除？</span>
@@ -112,7 +169,15 @@ export default function ProductManager() {
         </div>
       </div>
 
-      <p className="mb-3 text-xs text-muted">共 {list.length} 个商品</p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs text-muted">共 {list.length} 个商品</p>
+        <button
+          onClick={toggleSelectAll}
+          className="text-xs font-medium text-accent hover:text-accent-dark"
+        >
+          {selectedIds.size === list.length && list.length > 0 ? "取消全选" : "全选"}
+        </button>
+      </div>
 
       <div className="flex flex-col gap-2.5">
         {confirmingDelete && (
@@ -137,8 +202,17 @@ export default function ProductManager() {
         {list.map((p) => (
           <div
             key={p.id}
-            className="pastel-card flex items-center gap-3 p-2.5"
+            className={`pastel-card flex items-center gap-3 p-2.5 ${
+              selectedIds.has(p.id) ? "ring-2 ring-accent" : ""
+            }`}
           >
+            <button
+              onClick={() => toggleSelect(p.id)}
+              aria-label={selectedIds.has(p.id) ? "取消选择" : "选择"}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-accent"
+            >
+              {selectedIds.has(p.id) ? <SquareCheck size={20} /> : <Square size={20} />}
+            </button>
             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-sand">
               <ProductImage
                 src={p.image}

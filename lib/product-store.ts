@@ -174,6 +174,21 @@ export async function deleteProduct(id: string): Promise<void> {
   }
 }
 
+/** 批量删除商品：按 id 列表过滤掉，写入云端和本地 */
+export async function deleteProducts(ids: string[]): Promise<void> {
+  const idSet = new Set(ids);
+  const localList = (await readAll()).filter((p) => !idSet.has(p.id));
+  writeLocal(KEY, localList);
+  if (isSupabaseEnabled() && supabase) {
+    try {
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) throw error;
+    } catch (e) {
+      console.warn("[product-store] 批量删除 Supabase 商品失败", e);
+    }
+  }
+}
+
 /** 一键删除所有商品：写入空数组并清空云端 */
 export async function deleteAllProducts(): Promise<void> {
   writeLocal(KEY, []);
