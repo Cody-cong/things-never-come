@@ -39,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition hover:shadow-soft">
-      <Link href={`/product/${product.id}`} className="block">
+      <Link href={`/product/?id=${product.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-cream">
           <ProductImage
             src={product.image}
@@ -49,7 +49,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
       <div className="flex flex-col gap-1.5 p-4">
-        <Link href={`/product/${product.id}`} className="block">
+        <Link href={`/product/?id=${product.id}`} className="block">
           <p className="line-clamp-1 text-[15px] font-semibold text-ink transition group-hover:text-accent">
             {product.name}
           </p>

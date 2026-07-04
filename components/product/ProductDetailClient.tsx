@@ -11,13 +11,10 @@ import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
 import type { Product } from "@/lib/types";
 
-interface ProductDetailClientProps {
-  id: string;
-}
-
-export default function ProductDetailClient({ id }: ProductDetailClientProps) {
+export default function ProductDetailClient() {
   const router = useRouter();
   const { items, addItem } = useCart();
+  const [id, setId] = useState("");
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [spec, setSpec] = useState("");
@@ -28,14 +25,16 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
   });
 
   useEffect(() => {
+    const productId = new URLSearchParams(window.location.search).get("id") ?? "";
+    setId(productId);
     async function load() {
-      const p = await getProductById(id);
+      const p = await getProductById(productId);
       setProduct(p ?? null);
       if (p) setSpec(p.specs[0] ?? "");
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, []);
 
   const handleAdd = () => {
     if (!product) return;

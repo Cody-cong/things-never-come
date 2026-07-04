@@ -45,7 +45,7 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
 
   function handleClose() {
     onClose();
-    router.push(`/receipt/${order.id}`);
+    router.push(`/receipt/?orderId=${order.id}`);
   }
 
   return (

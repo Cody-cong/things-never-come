@@ -6,20 +6,18 @@ import { Package, Printer, Home } from "lucide-react";
 import { useOrders } from "@/lib/cart-context";
 import ReceiptContent from "./ReceiptContent";
 
-interface ReceiptClientProps {
-  orderId: string;
-}
-
-export default function ReceiptClient({ orderId }: ReceiptClientProps) {
+export default function ReceiptClient() {
   const router = useRouter();
   const { orders } = useOrders();
-  const order = orders.find((o) => o.id === orderId);
-
+  const [orderId, setOrderId] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setOrderId(new URLSearchParams(window.location.search).get("orderId") ?? "");
     setMounted(true);
   }, []);
+
+  const order = orders.find((o) => o.id === orderId);
 
   if (!mounted) {
     return (

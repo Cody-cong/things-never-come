@@ -7,12 +7,9 @@ import { getCategories } from "@/lib/category-store";
 import ProductCard from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
 
-interface CategoryListClientProps {
-  name: string;
-}
-
-export default function CategoryListClient({ name }: CategoryListClientProps) {
+export default function CategoryListClient() {
   const router = useRouter();
+  const [name, setName] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [list, setList] = useState<Product[]>([]);
   const [cats, setCats] = useState<string[]>([]);
@@ -20,20 +17,22 @@ export default function CategoryListClient({ name }: CategoryListClientProps) {
   const title = "商品";
 
   useEffect(() => {
+    const categoryName = new URLSearchParams(window.location.search).get("name") ?? "ALL";
+    setName(categoryName);
     async function load() {
       const [cats, products] = await Promise.all([
         getCategories(),
-        getProductsByCategory(name),
+        getProductsByCategory(categoryName),
       ]);
       setCats(cats);
       setList(products);
       setLoading(false);
     }
     load();
-  }, [name]);
+  }, []);
 
   function switchCategory(next: string) {
-    router.push(`/category/${encodeURIComponent(next)}`);
+    router.push(`/category/?name=${encodeURIComponent(next)}`);
   }
 
   return (

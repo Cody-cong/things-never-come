@@ -53,7 +53,7 @@ export default function CartPage() {
               className="flex gap-4 rounded-2xl bg-white p-4 shadow-card"
             >
               <Link
-                href={`/product/${item.productId}`}
+                href={`/product/?id=${item.productId}`}
                 className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-cream"
               >
                 <ProductImage
@@ -65,7 +65,7 @@ export default function CartPage() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
                   <Link
-                    href={`/product/${item.productId}`}
+                    href={`/product/?id=${item.productId}`}
                     className="line-clamp-2 text-base font-semibold text-ink"
                   >
                     {item.name}

@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import CategoryListClient from "@/components/category/CategoryListClient";
 
-export default function CategoryIndexPage() {
-  redirect("/category/ALL");
+export default function CategoryPage() {
+  return <CategoryListClient />;
 }
