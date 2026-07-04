@@ -67,21 +67,24 @@ export default function ProductForm({
   const [cats, setCats] = useState<string[]>([]);
 
   useEffect(() => {
-    const list = getCategories();
-    setCats(list);
-    // 若当前选中分类已不在列表（如被删除），修正为第一项
-    setForm((f) =>
-      list.includes(f.category) || !list.length
-        ? f
-        : { ...f, category: list[0] }
-    );
+    async function load() {
+      const list = await getCategories();
+      setCats(list);
+      // 若当前选中分类已不在列表（如被删除），修正为第一项
+      setForm((f) =>
+        list.includes(f.category) || !list.length
+          ? f
+          : { ...f, category: list[0] }
+      );
+    }
+    load();
   }, []);
 
   function update(field: keyof FormState, value: string | boolean) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.image.trim()) {
       window.alert("请上传商品图片");
       return;
@@ -121,9 +124,9 @@ export default function ProductForm({
       limitMessage: form.limitMessage.trim() || undefined,
     };
     if (isEdit && initial) {
-      updateProduct(initial.id, input);
+      await updateProduct(initial.id, input);
     } else {
-      addProduct(input);
+      await addProduct(input);
     }
     onSaved();
   }

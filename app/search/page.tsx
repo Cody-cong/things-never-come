@@ -12,7 +12,11 @@ export default function SearchPage() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    setProducts(getAllProducts());
+    async function load() {
+      const all = await getAllProducts();
+      setProducts(all);
+    }
+    load();
     inputRef.current?.focus();
   }, []);
 

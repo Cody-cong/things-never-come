@@ -20,10 +20,16 @@ export default function CategoryListClient({ name }: CategoryListClientProps) {
   const title = "商品";
 
   useEffect(() => {
-    setCats(getCategories());
-    setList(getProductsByCategory(name));
-    const t = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(t);
+    async function load() {
+      const [cats, products] = await Promise.all([
+        getCategories(),
+        getProductsByCategory(name),
+      ]);
+      setCats(cats);
+      setList(products);
+      setLoading(false);
+    }
+    load();
   }, [name]);
 
   function switchCategory(next: string) {

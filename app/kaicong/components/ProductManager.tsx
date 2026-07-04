@@ -22,27 +22,31 @@ export default function ProductManager() {
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
 
   useEffect(() => {
-    setList(getAllProducts());
+    async function load() {
+      const all = await getAllProducts();
+      setList(all);
+    }
+    load();
   }, [refreshKey]);
 
   function refresh() {
     setRefreshKey((k) => k + 1);
   }
 
-  function handleDelete(id: string) {
-    deleteProduct(id);
+  async function handleDelete(id: string) {
+    await deleteProduct(id);
     setConfirmingDelete(null);
     refresh();
   }
 
-  function handleDeleteAll() {
-    deleteAllProducts();
+  async function handleDeleteAll() {
+    await deleteAllProducts();
     setConfirmingDeleteAll(false);
     refresh();
   }
 
-  function handleToggleHot(p: Product) {
-    updateProduct(p.id, { hot: !p.hot });
+  async function handleToggleHot(p: Product) {
+    await updateProduct(p.id, { hot: !p.hot });
     refresh();
   }
 

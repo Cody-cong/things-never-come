@@ -25,21 +25,22 @@ export default function CategoryManager() {
   // 删除确认
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
-  function refresh() {
-    setList(getCategories());
+  async function refresh() {
+    const list = await getCategories();
+    setList(list);
   }
 
   useEffect(() => {
     refresh();
   }, []);
 
-  function handleAdd() {
+  async function handleAdd() {
     const name = newName.trim();
     if (!name) return;
-    addCategory(name);
+    await addCategory(name);
     setNewName("");
     setAdding(false);
-    refresh();
+    await refresh();
   }
 
   function startRename(cat: string) {
@@ -47,22 +48,22 @@ export default function CategoryManager() {
     setEditName(cat);
   }
 
-  function handleRename(oldName: string) {
+  async function handleRename(oldName: string) {
     const newName = editName.trim();
     if (!newName || newName === oldName) {
       setEditingCat(null);
       return;
     }
-    updateCategory(oldName, newName);
+    await updateCategory(oldName, newName);
     setEditingCat(null);
     setEditName("");
-    refresh();
+    await refresh();
   }
 
-  function handleDelete(name: string) {
-    deleteCategory(name);
+  async function handleDelete(name: string) {
+    await deleteCategory(name);
     setConfirmingDelete(null);
-    refresh();
+    await refresh();
   }
 
   return (

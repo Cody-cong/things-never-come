@@ -101,8 +101,8 @@ export default function CartPage() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => {
-                          const product = getProductById(item.productId);
+                        onClick={async () => {
+                          const product = await getProductById(item.productId);
                           const max = product?.maxQuantity;
                           if (max && max > 0) {
                             const currentQty = items

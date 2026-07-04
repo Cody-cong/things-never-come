@@ -39,12 +39,15 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    setProducts(getHotProducts().slice(0, 6));
-    setNickname(getNickname());
-    setFaqs(getFaqs());
-    setShowOnboarding(!hasUserProfile());
-    const t = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(t);
+    async function load() {
+      const hot = await getHotProducts();
+      setProducts(hot.slice(0, 6));
+      setNickname(getNickname());
+      setFaqs(getFaqs());
+      setShowOnboarding(!hasUserProfile());
+      setLoading(false);
+    }
+    load();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {

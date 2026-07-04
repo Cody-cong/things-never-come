@@ -28,10 +28,13 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
   });
 
   useEffect(() => {
-    const p = getProductById(id);
-    setProduct(p ?? null);
-    if (p) setSpec(p.specs[0] ?? "");
-    setLoading(false);
+    async function load() {
+      const p = await getProductById(id);
+      setProduct(p ?? null);
+      if (p) setSpec(p.specs[0] ?? "");
+      setLoading(false);
+    }
+    load();
   }, [id]);
 
   const handleAdd = () => {
