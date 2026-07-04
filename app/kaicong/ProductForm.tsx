@@ -63,14 +63,13 @@ export default function ProductForm({
   const [form, setForm] = useState<FormState>(
     initial ? toForm(initial) : EMPTY_FORM
   );
-  // 分类列表：初始为空，挂载后读 localStorage
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [cats, setCats] = useState<string[]>([]);
 
   useEffect(() => {
     async function load() {
       const list = await getCategories();
       setCats(list);
-      // 若当前选中分类已不在列表（如被删除），修正为第一项
       setForm((f) =>
         list.includes(f.category) || !list.length
           ? f
@@ -82,30 +81,25 @@ export default function ProductForm({
 
   function update(field: keyof FormState, value: string | boolean) {
     setForm((f) => ({ ...f, [field]: value }));
+    // 用户开始修改时清除对应字段错误
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
+
+  function validate(): boolean {
+    const next: Partial<Record<keyof FormState, string>> = {};
+    if (!form.image.trim()) next.image = "请上传商品图片";
+    if (!form.name.trim()) next.name = "请填写商品名称";
+    if (!form.nameEn.trim()) next.nameEn = "请填写商品英文名称";
+    const price = Number(form.price);
+    if (!form.price.trim() || !price || price <= 0) next.price = "请填写有效价格";
+    if (!form.category) next.category = "请先添加并选择一个分类";
+    setErrors(next);
+    return Object.keys(next).length === 0;
   }
 
   async function handleSave() {
-    if (!form.image.trim()) {
-      window.alert("请上传商品图片");
-      return;
-    }
-    if (!form.name.trim()) {
-      window.alert("请填写商品名称");
-      return;
-    }
-    if (!form.nameEn.trim()) {
-      window.alert("请填写商品英文名称");
-      return;
-    }
+    if (!validate()) return;
     const price = Number(form.price);
-    if (!price || price <= 0) {
-      window.alert("请填写有效价格");
-      return;
-    }
-    if (!form.category) {
-      window.alert("请先添加并选择一个分类");
-      return;
-    }
     const maxQuantityNum = form.maxQuantity.trim()
       ? Number(form.maxQuantity.trim())
       : undefined;
@@ -134,6 +128,7 @@ export default function ProductForm({
   const inputCls =
     "w-full rounded-2xl border border-blush bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-accent";
   const labelCls = "mb-1 block text-xs text-muted";
+  const errorCls = "mt-1 text-xs text-accent";
 
   return (
     <div className="flex flex-col px-4 pt-5 pb-24">
@@ -155,6 +150,7 @@ export default function ProductForm({
         value={form.image}
         onChange={(v) => update("image", v)}
       />
+      {errors.image && <p className={errorCls}>{errors.image}</p>}
 
       <label className={`mt-3 ${labelCls}`}>中文名称</label>
       <input
@@ -164,6 +160,7 @@ export default function ProductForm({
         placeholder="商品中文名称"
         className={inputCls}
       />
+      {errors.name && <p className={errorCls}>{errors.name}</p>}
 
       <label className={`mt-3 ${labelCls}`}>英文名称</label>
       <input
@@ -173,6 +170,7 @@ export default function ProductForm({
         placeholder="商品英文名称"
         className={inputCls}
       />
+      {errors.nameEn && <p className={errorCls}>{errors.nameEn}</p>}
 
       <label className={`mt-3 ${labelCls}`}>价格（USD）</label>
       <input
@@ -182,6 +180,7 @@ export default function ProductForm({
         placeholder="0"
         className={inputCls}
       />
+      {errors.price && <p className={errorCls}>{errors.price}</p>}
 
       <label className={`mt-3 ${labelCls}`}>商品描述</label>
       <textarea
@@ -207,6 +206,7 @@ export default function ProductForm({
           </option>
         ))}
       </select>
+      {errors.category && <p className={errorCls}>{errors.category}</p>}
 
       <label className={`mt-3 ${labelCls}`}>购买数量上限</label>
       <input

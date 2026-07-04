@@ -14,6 +14,8 @@ export default function CheckoutPage() {
   const { items, totalAmount, clearCart } = useCart();
   const { addOrder } = useOrders();
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   if (items.length === 0 && !lastOrder) {
     return (
@@ -29,17 +31,28 @@ export default function CheckoutPage() {
     );
   }
 
-  function handleSubmit() {
-    const order: Order = {
-      id: `GNC${Date.now()}`,
-      items: items.map((i) => ({ ...i })),
-      totalAmount,
-      createdAt: Date.now(),
-      status: "pending",
-    };
-    addOrder(order);
-    clearCart();
-    setLastOrder(order);
+  async function handleSubmit() {
+    if (isSubmitting) return;
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const order: Order = {
+        id: `GNC${Date.now()}`,
+        items: items.map((i) => ({ ...i })),
+        totalAmount,
+        createdAt: Date.now(),
+        status: "pending",
+      };
+      addOrder(order);
+      clearCart();
+      setLastOrder(order);
+    } catch (e) {
+      setError("订单提交失败，请重试");
+      console.error("[checkout] submit order failed", e);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -94,12 +107,24 @@ export default function CheckoutPage() {
               </span>
             </div>
           </div>
+
+          {error && (
+            <p className="mt-3 text-center text-xs text-accent">{error}</p>
+          )}
+
           <button
             onClick={handleSubmit}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark"
+            disabled={isSubmitting || items.length === 0}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            提交订单
-            <Sparkles size={16} />
+            {isSubmitting ? (
+              "提交中…"
+            ) : (
+              <>
+                提交订单
+                <Sparkles size={16} />
+              </>
+            )}
           </button>
           <p className="mt-3 text-center text-xs text-muted">
             不会扣除真实资金，纯模拟结算。

@@ -27,9 +27,11 @@ export default function ProfilePage() {
     return () => clearTimeout(t);
   }, [saved]);
 
-  const handleNameChange = (value: string) => {
-    setName(value);
-    setUserProfile({ name: value.trim() || DEFAULT_PROFILE.name, avatar });
+  const handleNameBlur = () => {
+    const trimmed = name.trim() || DEFAULT_PROFILE.name;
+    setName(trimmed);
+    setUserProfile({ name: trimmed, avatar });
+    setSaved(true);
   };
 
   const handleAvatarChange = (src: string) => {
@@ -53,7 +55,8 @@ export default function ProfilePage() {
           <input
             type="text"
             value={name}
-            onChange={(e) => handleNameChange(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={handleNameBlur}
             className="w-full max-w-[12rem] rounded-2xl border border-blush bg-cream/50 px-4 py-2 text-center text-xl font-semibold text-ink outline-none focus:border-accent"
           />
         </div>
@@ -61,7 +64,7 @@ export default function ProfilePage() {
         <div className="mt-6">
           <p className="mb-3 text-center text-xs text-muted">点击切换头像</p>
           <div className="flex flex-wrap justify-center gap-3">
-            {AVATAR_OPTIONS.map((src) => (
+            {AVATAR_OPTIONS.map((src, idx) => (
               <button
                 key={src}
                 onClick={() => handleAvatarChange(src)}
@@ -70,12 +73,15 @@ export default function ProfilePage() {
                     ? "ring-2 ring-accent ring-offset-2"
                     : "opacity-70 hover:opacity-100"
                 }`}
-                aria-label="选择头像"
+                aria-label={`选择头像 ${idx + 1}${
+                  avatar === src ? "（已选中）" : ""
+                }`}
+                aria-pressed={avatar === src}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={src}
-                  alt="头像选项"
+                  alt={`头像选项 ${idx + 1}`}
                   className="h-full w-full object-cover"
                 />
               </button>
@@ -98,7 +104,11 @@ export default function ProfilePage() {
       </div>
 
       {saved && (
-        <div className="pointer-events-none fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-ink/80 px-4 py-2 text-sm text-white">
+        <div
+          className="pointer-events-none fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-ink/80 px-4 py-2 text-sm text-white"
+          role="status"
+          aria-live="polite"
+        >
           已保存
         </div>
       )}

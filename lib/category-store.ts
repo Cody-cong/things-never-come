@@ -35,17 +35,29 @@ async function readRemote(): Promise<string[]> {
 
 async function syncRemote(list: string[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
-  // 简单策略：清空后重新写入（分类数量少，性能可接受）
-  const { error: deleteError } = await supabase
-    .from("categories")
-    .delete()
-    .neq("id", "");
-  if (deleteError) throw deleteError;
-  if (list.length > 0) {
-    const { error: insertError } = await supabase
+
+  // 增量同步：读取远程现有分类，删除多余的，插入新增的，保留不变的。
+  // 比“先删光再全量插入”更安全，可降低并发覆盖导致的数据丢失风险。
+  const remoteNames = await readRemote();
+  const localSet = new Set(list);
+  const remoteSet = new Set(remoteNames);
+
+  const toDelete = remoteNames.filter((name) => !localSet.has(name));
+  const toInsert = list.filter((name) => !remoteSet.has(name));
+
+  if (toDelete.length > 0) {
+    const { error } = await supabase
       .from("categories")
-      .insert(list.map((name) => ({ name })));
-    if (insertError) throw insertError;
+      .delete()
+      .in("name", toDelete);
+    if (error) throw error;
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase
+      .from("categories")
+      .insert(toInsert.map((name) => ({ name })));
+    if (error) throw error;
   }
 }
 

@@ -2,8 +2,25 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 
-const ADMIN_PASSWORD = "kaicong";
 const AUTH_KEY = "gnc_admin_auth";
+
+async function sha256(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function checkPassword(password: string): Promise<boolean> {
+  const configured = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+  if (!configured) return false;
+  const [inputHash, configuredHash] = await Promise.all([
+    sha256(password),
+    sha256(configured),
+  ]);
+  return inputHash === configuredHash;
+}
 
 export default function AdminGuard({ children }: { children: ReactNode }) {
   const [authed, setAuthed] = useState(false);
@@ -18,8 +35,9 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  function handleLogin() {
-    if (password === ADMIN_PASSWORD) {
+  async function handleLogin() {
+    const ok = await checkPassword(password);
+    if (ok) {
       setAuthed(true);
       setError(false);
       try {

@@ -6,8 +6,7 @@ import { Search } from "lucide-react";
 import { getHotProducts } from "@/lib/product-store";
 import { getFaqs, type HomeFaq } from "@/lib/faq-store";
 import { addFeedback } from "@/lib/feedback-store";
-import { hasUserProfile } from "@/lib/profile-store";
-import { getNickname } from "@/lib/mock-data";
+import { hasUserProfile, getUserProfile } from "@/lib/profile-store";
 import ProductCard from "@/components/ProductCard";
 import OnboardingModal from "@/components/OnboardingModal";
 import type { Product } from "@/lib/types";
@@ -42,7 +41,7 @@ export default function HomePage() {
     async function load() {
       const hot = await getHotProducts();
       setProducts(hot.slice(0, 6));
-      setNickname(getNickname());
+      setNickname(getUserProfile().name);
       setFaqs(getFaqs());
       setShowOnboarding(!hasUserProfile());
       setLoading(false);
@@ -90,6 +89,7 @@ export default function HomePage() {
           <form
             onSubmit={handleSearch}
             className="mx-auto mt-8 flex max-w-md items-center gap-3 rounded-full bg-white px-2 py-2 shadow-card"
+            aria-label="商品搜索"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-light">
               <Search size={18} className="text-accent" />
@@ -99,6 +99,7 @@ export default function HomePage() {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="搜索想要的商品"
+              aria-label="搜索想要的商品"
               className="flex-1 bg-transparent text-sm text-ink placeholder:text-muted outline-none"
             />
             <button
@@ -223,32 +224,42 @@ export default function HomePage() {
           </div>
 
           <div className="mx-auto max-w-2xl divide-y divide-ink/5 rounded-2xl bg-white shadow-card">
-            {faqs.map((faq) => (
-              <div key={faq.id} className="px-6 py-5">
-                <button
-                  onClick={() =>
-                    setOpenFaqs((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(faq.id)) {
-                        next.delete(faq.id);
-                      } else {
-                        next.add(faq.id);
-                      }
-                      return next;
-                    })
-                  }
-                  className="flex w-full items-center justify-between text-left"
-                >
-                  <span className="text-base font-semibold text-ink">{faq.q}</span>
-                  <span className="ml-4 text-2xl leading-none text-muted">
-                    {openFaqs.has(faq.id) ? "−" : "+"}
-                  </span>
-                </button>
-                {openFaqs.has(faq.id) && (
-                  <p className="mt-3 text-sm leading-relaxed text-muted">{faq.a}</p>
-                )}
-              </div>
-            ))}
+            {faqs.map((faq) => {
+              const isOpen = openFaqs.has(faq.id);
+              return (
+                <div key={faq.id} className="px-6 py-5">
+                  <button
+                    onClick={() =>
+                      setOpenFaqs((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(faq.id)) {
+                          next.delete(faq.id);
+                        } else {
+                          next.add(faq.id);
+                        }
+                        return next;
+                      })
+                    }
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${faq.id}`}
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <span className="text-base font-semibold text-ink">{faq.q}</span>
+                    <span className="ml-4 text-2xl leading-none text-muted">
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <p
+                      id={`faq-answer-${faq.id}`}
+                      className="mt-3 text-sm leading-relaxed text-muted"
+                    >
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -267,11 +278,16 @@ export default function HomePage() {
             onSubmit={handleFeedbackSubmit}
             className="mx-auto max-w-2xl rounded-2xl bg-white p-6 shadow-card md:p-8"
           >
+            <label htmlFor="feedback-text" className="sr-only">
+              反馈内容
+            </label>
             <textarea
+              id="feedback-text"
               value={feedbackText}
               onChange={(e) => setFeedbackText(e.target.value)}
               placeholder="请描述你的建议、遇到的问题或任何想吐槽的…"
               rows={5}
+              aria-label="反馈内容"
               className="w-full resize-none rounded-2xl border border-blush bg-cream/50 px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-accent"
             />
             <div className="mt-4 flex items-center justify-end gap-4">
@@ -294,7 +310,7 @@ export default function HomePage() {
         <OnboardingModal
           onComplete={() => {
             setShowOnboarding(false);
-            setNickname(getNickname());
+            setNickname(getUserProfile().name);
           }}
         />
       )}

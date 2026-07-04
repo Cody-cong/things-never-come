@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { getAllProducts } from "@/lib/product-store";
 import ProductCard from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
+
+const PAGE_SIZE = 12;
 
 export default function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [keyword, setKeyword] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     async function load() {
@@ -27,6 +30,16 @@ export default function SearchPage() {
   }, [keyword, products]);
 
   const showAll = keyword.trim() === "";
+  const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const pageResults = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return results.slice(start, start + PAGE_SIZE);
+  }, [results, page]);
+
+  // 关键词变化时回到第一页
+  useEffect(() => {
+    setPage(1);
+  }, [keyword]);
 
   return (
     <div className="mx-auto max-w-site px-6 py-8 md:px-8">
@@ -42,6 +55,7 @@ export default function SearchPage() {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           placeholder="输入关键词搜索"
+          aria-label="搜索商品"
           className="flex-1 bg-transparent text-sm text-ink placeholder:text-muted outline-none"
         />
         <Sparkles size={16} className="mr-3 text-accent/50" />
@@ -70,10 +84,34 @@ export default function SearchPage() {
               </p>
             )}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {results.map((p) => (
+              {pageResults.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  aria-label="上一页"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-card text-ink transition hover:bg-cream disabled:opacity-40"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <span className="text-sm text-muted">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  aria-label="下一页"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-card text-ink transition hover:bg-cream disabled:opacity-40"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

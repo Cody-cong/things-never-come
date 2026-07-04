@@ -8,12 +8,13 @@ import { useCart } from "@/lib/cart-context";
 interface NavItem {
   href: string;
   icon: LucideIcon;
+  label: string;
 }
 
 const NAVS: NavItem[] = [
-  { href: "/", icon: Home },
-  { href: "/cart", icon: ShoppingCart },
-  { href: "/profile", icon: User },
+  { href: "/", icon: Home, label: "首页" },
+  { href: "/cart", icon: ShoppingCart, label: "购物车" },
+  { href: "/profile", icon: User, label: "我的" },
 ];
 
 export default function BottomNav() {
@@ -26,12 +27,13 @@ export default function BottomNav() {
 
   return (
     <nav className="sticky bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-blush/50 bg-white/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(93,64,55,0.04)]">
-      {NAVS.map(({ href, icon: Icon }) => {
+      {NAVS.map(({ href, icon: Icon, label }) => {
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
           <Link
             key={href}
             href={href}
+            aria-label={label}
             className="relative flex h-full flex-1 items-center justify-center"
           >
             <span className="relative inline-flex">

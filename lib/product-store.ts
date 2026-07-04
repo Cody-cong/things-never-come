@@ -145,7 +145,7 @@ export async function getProductsByCategory(category: string): Promise<Product[]
 export async function addProduct(input: ProductInput): Promise<Product> {
   const localList = await readAll();
   const product: Product = {
-    id: `p${Date.now()}`,
+    id: `p${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     shopId: "admin",
     name: input.name,
     nameEn: input.nameEn?.trim() || undefined,

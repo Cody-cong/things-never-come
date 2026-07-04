@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, X, FileText } from "lucide-react";
-import { toPng } from "html-to-image";
 import ReceiptContent from "./ReceiptContent";
 import type { Order } from "@/lib/types";
 
@@ -15,6 +14,7 @@ interface ReceiptModalProps {
 export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
   const router = useRouter();
   const receiptRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -24,8 +24,10 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
   }, []);
 
   async function handleSaveImage() {
-    if (!receiptRef.current) return;
+    if (!receiptRef.current || saving) return;
+    setSaving(true);
     try {
+      const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(receiptRef.current, {
         pixelRatio: 2,
         quality: 0.95,
@@ -36,6 +38,8 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
       link.click();
     } catch {
       window.print();
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -48,6 +52,9 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
     <div
       className="receipt-modal-overlay fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
       onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="receipt-title"
     >
       <div
         className="receipt-modal-panel w-full max-w-xl rounded-3xl bg-cream p-4 shadow-float sm:p-6"
@@ -59,7 +66,9 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
               <FileText size={18} className="text-accent" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-ink">账单已生成</h2>
+              <h2 id="receipt-title" className="text-lg font-bold text-ink">
+                账单已生成
+              </h2>
               <p className="text-xs text-muted">订单提交成功，请查收</p>
             </div>
           </div>
@@ -79,10 +88,11 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
         <div className="receipt-modal-footer mt-4 flex items-center gap-3 no-print">
           <button
             onClick={handleSaveImage}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2.5 text-sm font-bold text-white transition hover:bg-accent-dark"
+            disabled={saving}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2.5 text-sm font-bold text-white transition hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Download size={16} />
-            保存图片
+            {saving ? "保存中…" : "保存图片"}
           </button>
           <button
             onClick={handleClose}

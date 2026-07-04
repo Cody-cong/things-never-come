@@ -135,11 +135,17 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
           )}
           <div className="mt-6">
             <h2 className="mb-3 text-sm font-bold text-ink">规格</h2>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              role="radiogroup"
+              aria-label="商品规格"
+            >
               {product.specs.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSpec(s)}
+                  role="radio"
+                  aria-checked={spec === s}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                     spec === s
                       ? "bg-accent text-white"
@@ -166,8 +172,11 @@ export default function ProductDetailClient({ id }: ProductDetailClientProps) {
             </Link>
             <button
               onClick={handleAdd}
+              disabled={added}
               className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-bold text-white transition ${
-                added ? "bg-accent-dark" : "bg-accent hover:bg-accent-dark"
+                added
+                  ? "bg-accent-dark cursor-not-allowed"
+                  : "bg-accent hover:bg-accent-dark"
               }`}
             >
               {added ? (

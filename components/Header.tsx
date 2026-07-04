@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 
 const NAVS = [
@@ -20,27 +20,41 @@ export default function Header() {
   const { totalCount } = useCart();
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  const pendingY = useRef(0);
 
   useEffect(() => {
     function handleScroll() {
-      const currentY = window.scrollY;
-      // 页面顶部时始终显示
-      if (currentY < 20) {
-        setHidden(false);
+      pendingY.current = window.scrollY;
+      if (rafRef.current !== null) return;
+
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        const currentY = pendingY.current;
+
+        // 页面顶部时始终显示
+        if (currentY < 20) {
+          setHidden(false);
+          setLastScrollY(currentY);
+          return;
+        }
+        // 往下滑动超过阈值时收起，往上翻时出现
+        if (currentY > lastScrollY && currentY > 60) {
+          setHidden(true);
+        } else if (currentY < lastScrollY) {
+          setHidden(false);
+        }
         setLastScrollY(currentY);
-        return;
-      }
-      // 往下滑动超过阈值时收起，往上翻时出现
-      if (currentY > lastScrollY && currentY > 60) {
-        setHidden(true);
-      } else if (currentY < lastScrollY) {
-        setHidden(false);
-      }
-      setLastScrollY(currentY);
+      });
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
   }, [lastScrollY]);
 
   return (

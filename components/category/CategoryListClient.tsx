@@ -45,9 +45,14 @@ export default function CategoryListClient({ name }: CategoryListClientProps) {
         )}
       </div>
 
-      <div className="mb-8 flex flex-wrap items-center gap-2">
+      <div
+        className="mb-8 flex flex-wrap items-center gap-2"
+        role="group"
+        aria-label="商品分类筛选"
+      >
         <button
           onClick={() => switchCategory("ALL")}
+          aria-pressed={name === "ALL"}
           className={`rounded-full px-4 py-2 text-sm font-medium transition ${
             name === "ALL"
               ? "bg-accent text-white"
@@ -60,6 +65,7 @@ export default function CategoryListClient({ name }: CategoryListClientProps) {
           <button
             key={c}
             onClick={() => switchCategory(c)}
+            aria-pressed={name === c}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               name === c
                 ? "bg-accent text-white"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   setUserProfile,
   DEFAULT_PROFILE,
@@ -14,6 +14,11 @@ interface OnboardingModalProps {
 export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState(DEFAULT_PROFILE.avatar);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   function handleDefault() {
     setUserProfile(DEFAULT_PROFILE);
@@ -28,9 +33,17 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+    >
       <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-float">
-        <h2 className="text-center text-lg font-semibold text-ink">
+        <h2
+          id="onboarding-title"
+          className="text-center text-lg font-semibold text-ink"
+        >
           欢迎来到 things never come
         </h2>
         <p className="mt-1 text-center text-xs text-muted">
@@ -42,14 +55,14 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={avatar}
-              alt="默认头像"
+              alt="选中的头像"
               className="h-full w-full object-cover"
             />
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-5 gap-2">
-          {AVATAR_OPTIONS.map((src) => (
+          {AVATAR_OPTIONS.map((src, idx) => (
             <button
               key={src}
               onClick={() => setAvatar(src)}
@@ -58,20 +71,27 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   ? "ring-2 ring-accent ring-offset-2"
                   : "opacity-80 hover:opacity-100"
               }`}
-              aria-label="选择头像"
+              aria-label={`选择头像 ${idx + 1}${
+                avatar === src ? "（已选中）" : ""
+              }`}
+              aria-pressed={avatar === src}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
-                alt="头像选项"
+                alt={`头像选项 ${idx + 1}`}
                 className="h-full w-full object-cover"
               />
             </button>
           ))}
         </div>
 
-        <label className="mt-5 block text-xs text-muted">你的名字</label>
+        <label htmlFor="onboarding-name" className="mt-5 block text-xs text-muted">
+          你的名字
+        </label>
         <input
+          ref={inputRef}
+          id="onboarding-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}

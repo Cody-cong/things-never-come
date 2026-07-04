@@ -9,25 +9,8 @@ export function buildImageUrl(
   return `${IMAGE_BASE}?prompt=${encodeURIComponent(prompt)}&image_size=${size}`;
 }
 
-/** 当前模拟用户（avatar 留空，前端用图标代替） */
+/** 默认模拟用户（实际用户名/头像由 profile-store 维护） */
 export const mockUser = {
   nickname: "Zara",
   avatar: "",
 };
-
-import { getUserProfile, setUserProfile } from "./profile-store";
-
-const NICKNAME_KEY = "gnickname";
-
-export function getNickname(): string {
-  if (typeof window === "undefined") return mockUser.nickname;
-  return getUserProfile().name || mockUser.nickname;
-}
-
-export function setNickname(name: string): void {
-  if (typeof window === "undefined") return;
-  const current = getUserProfile();
-  setUserProfile({ ...current, name: name.trim() || mockUser.nickname });
-  // 保持旧 key 同步，避免其他旧逻辑读到旧值
-  localStorage.setItem(NICKNAME_KEY, name.trim() || mockUser.nickname);
-}

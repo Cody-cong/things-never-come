@@ -17,7 +17,9 @@ interface ReceiptContentProps {
 }
 
 export default function ReceiptContent({ order }: ReceiptContentProps) {
-  const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const totalQty = items.reduce((s, i) => s + (Number(i.quantity) || 0), 0);
+  const totalAmount = Number(order?.totalAmount) || 0;
 
   return (
     <div className="receipt-paper relative overflow-hidden rounded-2xl bg-white p-6 shadow-card sm:p-8 md:p-10">
@@ -43,7 +45,7 @@ export default function ReceiptContent({ order }: ReceiptContentProps) {
         </div>
 
         <div className="mt-6 space-y-4">
-          {order.items.map((item) => (
+          {items.map((item) => (
             <div
               key={`${item.productId}-${item.spec}`}
               className="flex items-center gap-3"
@@ -72,7 +74,7 @@ export default function ReceiptContent({ order }: ReceiptContentProps) {
           <div className="mt-4 flex items-center justify-between border-t border-cream pt-4">
             <span className="text-base font-bold text-ink">合计</span>
             <span className="text-2xl font-bold text-accent">
-              {formatPrice(order.totalAmount)}
+              {formatPrice(totalAmount)}
             </span>
           </div>
         </div>

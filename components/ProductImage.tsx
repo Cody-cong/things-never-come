@@ -24,6 +24,7 @@ export default function ProductImage({
     return (
       <div
         className={`${containerClassName} flex items-center justify-center bg-cream`}
+        style={{ aspectRatio: "1 / 1" }}
       >
         <div className="flex flex-col items-center text-muted/70">
           <ImageOff size={24} />
@@ -41,6 +42,7 @@ export default function ProductImage({
         alt={alt}
         className={className}
         loading={lazy ? "lazy" : undefined}
+        decoding="async"
         onError={() => setFailed(true)}
       />
     </>

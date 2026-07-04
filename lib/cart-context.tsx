@@ -113,6 +113,23 @@ export function AppProviders({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, []);
 
+  // 监听其他标签页的 storage 变化，保持购物车/订单同步
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      try {
+        if (e.key === CART_KEY && e.newValue) {
+          dispatch({ type: "HYDRATE", items: JSON.parse(e.newValue) as CartItem[] });
+        } else if (e.key === ORDER_KEY && e.newValue) {
+          dispatchOrder({ type: "HYDRATE", orders: JSON.parse(e.newValue) as Order[] });
+        }
+      } catch {
+        /* ignore malformed storage */
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   useEffect(() => {
     if (!hydrated) return;
     try {
