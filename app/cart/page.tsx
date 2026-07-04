@@ -1,24 +1,48 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
+import { useCart, useOrders } from "@/lib/cart-context";
 import { getProductById } from "@/lib/product-store";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
+import ReceiptModal from "@/components/receipt/ReceiptModal";
 import { useState } from "react";
+import type { Order } from "@/lib/types";
 
 export default function CartPage() {
-  const router = useRouter();
-  const { items, totalAmount, updateQty, removeItem } = useCart();
+  const { items, totalAmount, updateQty, removeItem, clearCart } = useCart();
+  const { addOrder } = useOrders();
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
     message: "",
   });
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  if (items.length === 0) {
+  async function handleCheckout() {
+    if (submitting || items.length === 0) return;
+    setSubmitting(true);
+    try {
+      const order: Order = {
+        id: `GNC${Date.now()}`,
+        items: items.map((i) => ({ ...i })),
+        totalAmount,
+        createdAt: Date.now(),
+        status: "pending",
+      };
+      addOrder(order);
+      clearCart();
+      setLastOrder(order);
+    } catch (e) {
+      console.error("[cart] checkout failed", e);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (items.length === 0 && !lastOrder) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-site flex-col items-center justify-center px-6 py-20 text-center md:px-8">
         <div className="relative">
@@ -142,11 +166,18 @@ export default function CartPage() {
             不会扣除真实资金，纯模拟结算。
           </p>
           <button
-            onClick={() => router.push("/checkout")}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark"
+            onClick={handleCheckout}
+            disabled={submitting || items.length === 0}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            去结算
-            <Sparkles size={16} />
+            {submitting ? (
+              "结算中…"
+            ) : (
+              <>
+                立即结算
+                <Sparkles size={16} />
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -155,6 +186,13 @@ export default function CartPage() {
         <LimitAlertModal
           message={limitAlert.message}
           onClose={() => setLimitAlert({ show: false, message: "" })}
+        />
+      )}
+
+      {lastOrder && (
+        <ReceiptModal
+          order={lastOrder}
+          onClose={() => setLastOrder(null)}
         />
       )}
     </div>

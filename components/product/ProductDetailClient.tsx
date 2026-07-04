@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ShoppingCart, Plus, Check, ChevronLeft } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, ChevronLeft } from "lucide-react";
 import { getProductById } from "@/lib/product-store";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
@@ -18,6 +18,7 @@ export default function ProductDetailClient() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [spec, setSpec] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
@@ -43,7 +44,7 @@ export default function ProductDetailClient() {
       const currentQty = items
         .filter((i) => i.productId === product.id)
         .reduce((sum, i) => sum + i.quantity, 0);
-      if (currentQty + 1 > max) {
+      if (currentQty + quantity > max) {
         setLimitAlert({
           show: true,
           message:
@@ -59,9 +60,10 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.image,
       spec,
-      quantity: 1,
+      quantity,
     });
     setAdded(true);
+    setQuantity(1);
     setTimeout(() => setAdded(false), 1500);
   };
 
@@ -154,6 +156,34 @@ export default function ProductDetailClient() {
                   {s}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="mb-3 text-sm font-bold text-ink">数量</h2>
+            <div
+              className="inline-flex items-center gap-1 rounded-full bg-cream px-1 py-0.5"
+              role="group"
+              aria-label="购买数量"
+            >
+              <button
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+                aria-label="减少数量"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90 disabled:opacity-30"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="min-w-[32px] text-center text-sm font-bold text-ink">
+                {quantity}
+              </span>
+              <button
+                onClick={() => setQuantity((q) => q + 1)}
+                aria-label="增加数量"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90"
+              >
+                <Plus size={16} />
+              </button>
             </div>
           </div>
 
