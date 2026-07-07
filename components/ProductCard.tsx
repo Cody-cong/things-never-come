@@ -119,9 +119,10 @@ export default function ProductCard({ product }: ProductCardProps) {
             type="button"
             onClick={handleAdd}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2 text-sm font-medium text-white transition hover:bg-accent-dark active:scale-95"
+            aria-label="加入购物车"
           >
             <ShoppingCart size={14} />
-            加入购物车
+            <span className="hidden sm:inline">加入购物车</span>
           </button>
         </div>
       </div>
