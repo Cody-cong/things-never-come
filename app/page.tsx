@@ -121,8 +121,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mx-auto max-w-3xl">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="mx-auto max-w-site">
+            <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
               {loading
                 ? Array.from({ length: 4 }).map((_, i) => (
                     <div
