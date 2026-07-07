@@ -6,12 +6,16 @@ import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart, useOrders } from "@/lib/cart-context";
 import { getProductById } from "@/lib/product-store";
 import { formatPrice } from "@/lib/utils";
-import { checkAchievements, type Achievement } from "@/lib/achievements";
+import {
+  checkAchievements,
+  getAchievements,
+  type Achievement,
+} from "@/lib/achievement-store";
 import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
 import ReceiptModal from "@/components/receipt/ReceiptModal";
 import AchievementModal from "@/components/AchievementModal";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Order } from "@/lib/types";
 
 export default function CartPage() {
@@ -25,7 +29,20 @@ export default function CartPage() {
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
+  const [enabledAchievements, setEnabledAchievements] = useState<Achievement[]>([]);
   const lastOrderRef = useRef<Order | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      const list = await getAchievements();
+      if (mounted) setEnabledAchievements(list);
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function handleCheckout() {
     if (submitting || items.length === 0) return;
@@ -50,12 +67,12 @@ export default function CartPage() {
     }
   }
 
-  function handleReceiptClose() {
+  async function handleReceiptClose() {
     const order = lastOrderRef.current;
     setLastOrder(null);
     if (order) {
-      const unlocked = checkAchievements(order);
-      console.log("[achievement] 总额:", order.totalAmount, "解锁:", unlocked.length, unlocked.map(a => a.id));
+      const unlocked = await checkAchievements(order);
+      console.log("[achievement] 总额:", order.totalAmount, "解锁:", unlocked.length, unlocked.map((a) => a.id));
       if (unlocked.length > 0) {
         setAchievementQueue(unlocked);
         return;
@@ -204,21 +221,22 @@ export default function CartPage() {
           </p>
 
           {/* 成就进度提示 */}
-          {totalAmount >= 100_000_000 && (
-            <p className="mt-2 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent">
-              🎯 结算后解锁：完成小目标
-            </p>
-          )}
-          {totalAmount >= 1_000_000_000_000 && (
-            <p className="mt-1 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent">
-              💎 结算后解锁：神豪
-            </p>
-          )}
-          {new Set(items.map((i) => i.productId)).size >= 15 && (
-            <p className="mt-1 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent">
-              💳 结算后解锁：刷卡无感者
-            </p>
-          )}
+          {enabledAchievements.map((a) => {
+            const met =
+              (a.id === "small_goal" && totalAmount >= 100_000_000) ||
+              (a.id === "magnate" && totalAmount >= 1_000_000_000_000) ||
+              (a.id === "card_swiper" &&
+                new Set(items.map((i) => i.productId)).size >= 15);
+            if (!met) return null;
+            return (
+              <p
+                key={a.id}
+                className="mt-1 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent first:mt-2"
+              >
+                {a.icon} 结算后解锁：{a.title}
+              </p>
+            );
+          })}
 
           <button
             onClick={handleCheckout}

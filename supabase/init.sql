@@ -43,12 +43,19 @@ CREATE TABLE IF NOT EXISTS feedbacks (
   created_at BIGINT NOT NULL
 );
 
--- 允许匿名用户（浏览器端）读写商品、分类、FAQ 和反馈
+-- 成就启用状态表（成就逻辑内建于代码，此表仅控制是否启用）
+CREATE TABLE IF NOT EXISTS achievement_settings (
+  id TEXT PRIMARY KEY,
+  enabled BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- 允许匿名用户（浏览器端）读写商品、分类、FAQ、反馈和成就设置
 -- 注意：生产环境如需限制权限，可改为仅 authenticated 用户或添加 RLS 策略
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faqs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedbacks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE achievement_settings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow anonymous read products"
   ON products FOR SELECT TO anon USING (true);
@@ -73,3 +80,9 @@ CREATE POLICY "Allow anonymous read feedbacks"
 
 CREATE POLICY "Allow anonymous write feedbacks"
   ON feedbacks FOR ALL TO anon USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow anonymous read achievement_settings"
+  ON achievement_settings FOR SELECT TO anon USING (true);
+
+CREATE POLICY "Allow anonymous write achievement_settings"
+  ON achievement_settings FOR ALL TO anon USING (true) WITH CHECK (true);

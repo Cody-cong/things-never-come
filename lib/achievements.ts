@@ -36,18 +36,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
 ];
 
-/** 返回本次订单解锁的成就列表（保持定义顺序） */
-export function checkAchievements(order: Order): Achievement[] {
-  return ACHIEVEMENTS.filter((a) => a.check(order));
-}
-
-/** 基于全部历史订单判断成就是否曾解锁（用于成就列表页） */
-export function getUnlockedAchievements(orders: Order[]): Set<string> {
-  const unlocked = new Set<string>();
-  for (const o of orders) {
-    for (const a of checkAchievements(o)) {
-      unlocked.add(a.id);
-    }
-  }
-  return unlocked;
+/** 判断单个成就是否被本次订单解锁（不关注启用/禁用状态） */
+export function checkSingleAchievement(
+  achievement: Achievement,
+  order: Order
+): boolean {
+  return achievement.check(order);
 }

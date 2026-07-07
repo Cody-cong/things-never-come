@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Package, Tags, HelpCircle, MessageSquare } from "lucide-react";
+import { Package, Tags, HelpCircle, MessageSquare, Trophy } from "lucide-react";
 import AdminGuard from "./components/AdminGuard";
 
 const ITEMS = [
@@ -28,6 +28,12 @@ const ITEMS = [
     label: "用户反馈查看",
     icon: MessageSquare,
     color: "bg-sky",
+  },
+  {
+    href: "/kaicong/achievements",
+    label: "成就管理",
+    icon: Trophy,
+    color: "bg-mint",
   },
 ];
 
