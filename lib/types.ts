@@ -54,5 +54,7 @@ export interface Order {
   totalAmount: number;
   createdAt: number;
   status: "pending";
+  /** AI 对本次订单的搞笑评价 */
+  aiReview?: string;
 }
 

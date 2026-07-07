@@ -16,12 +16,13 @@ import LimitAlertModal from "@/components/LimitAlertModal";
 import ReceiptModal from "@/components/receipt/ReceiptModal";
 import AchievementModal from "@/components/AchievementModal";
 import { useState, useRef, useEffect } from "react";
+import { generateOrderReview } from "@/lib/ai-review";
 import type { Order } from "@/lib/types";
 
 export default function CartPage() {
   const router = useRouter();
   const { items, totalAmount, updateQty, removeItem, clearCart } = useCart();
-  const { addOrder } = useOrders();
+  const { addOrder, updateOrder } = useOrders();
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
     message: "",
@@ -60,6 +61,14 @@ export default function CartPage() {
       clearCart();
       lastOrderRef.current = order;
       setLastOrder(order);
+
+      // 异步生成 AI 搞笑评价，完成后持久化到订单
+      generateOrderReview(order).then((review) => {
+        const updated = { ...order, aiReview: review };
+        updateOrder(updated);
+        lastOrderRef.current = updated;
+        setLastOrder(updated);
+      });
     } catch (e) {
       console.error("[cart] checkout failed", e);
     } finally {

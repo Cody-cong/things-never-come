@@ -1,5 +1,6 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
 import ProductImage from "@/components/ProductImage";
 import { formatPrice } from "@/lib/utils";
 import type { Order } from "@/lib/types";
@@ -77,6 +78,23 @@ export default function ReceiptContent({ order }: ReceiptContentProps) {
               {formatPrice(totalAmount)}
             </span>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl bg-cream p-4">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-accent">
+            <Sparkles size={14} />
+            <span>AI 毒舌点评</span>
+          </div>
+          {order.aiReview ? (
+            <p className="mt-2 text-sm leading-relaxed text-ink">
+              {order.aiReview}
+            </p>
+          ) : (
+            <div className="mt-2 space-y-2">
+              <div className="skeleton h-4 w-full rounded" />
+              <div className="skeleton h-4 w-4/5 rounded" />
+            </div>
+          )}
         </div>
 
         <div className="mt-8 text-center">

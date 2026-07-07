@@ -63,7 +63,8 @@ function cartReducer(state: CartItem[], action: CartAction): CartItem[] {
 /* ---------------- Orders ---------------- */
 type OrderAction =
   | { type: "HYDRATE"; orders: Order[] }
-  | { type: "ADD_ORDER"; order: Order };
+  | { type: "ADD_ORDER"; order: Order }
+  | { type: "UPDATE_ORDER"; order: Order };
 
 function orderReducer(state: Order[], action: OrderAction): Order[] {
   switch (action.type) {
@@ -71,6 +72,8 @@ function orderReducer(state: Order[], action: OrderAction): Order[] {
       return action.orders;
     case "ADD_ORDER":
       return [action.order, ...state];
+    case "UPDATE_ORDER":
+      return state.map((o) => (o.id === action.order.id ? action.order : o));
     default:
       return state;
   }
@@ -89,6 +92,7 @@ interface CartCtx {
 interface OrderCtx {
   orders: Order[];
   addOrder: (order: Order) => void;
+  updateOrder: (order: Order) => void;
 }
 
 const CartContext = createContext<CartCtx | null>(null);
@@ -192,10 +196,14 @@ export function AppProviders({ children }: { children: ReactNode }) {
     (order: Order) => dispatchOrder({ type: "ADD_ORDER", order }),
     []
   );
+  const updateOrder = useCallback(
+    (order: Order) => dispatchOrder({ type: "UPDATE_ORDER", order }),
+    []
+  );
 
   const orderValue: OrderCtx = useMemo(
-    () => ({ orders, addOrder }),
-    [orders, addOrder]
+    () => ({ orders, addOrder, updateOrder }),
+    [orders, addOrder, updateOrder]
   );
 
   return (
