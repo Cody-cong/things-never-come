@@ -16,7 +16,7 @@ export type { Achievement };
  * 哪些成就是"启用"的；被禁用的成就不会再在购物车结算或成就展示中出现。
  * 状态优先同步到 Supabase，未配置或离线时回退到 localStorage。
  */
-const KEY = "gnc_achievements_enabled_v1";
+const KEY = "gnc_achievements_enabled_v2";
 
 const DEFAULT_ENABLED_IDS = new Set(ACHIEVEMENTS.map((a) => a.id));
 
