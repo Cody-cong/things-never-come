@@ -10,7 +10,7 @@ import {
 } from "@/lib/achievement-store";
 
 export default function AchievementManager() {
-  const [enabledIds, setEnabledIds] = useState<Set<string>>(new Set());
+  const [enabledIds, setEnabledIds] = useState<Set<string> | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,10 +61,18 @@ export default function AchievementManager() {
       </div>
 
       <p className="mb-3 text-xs text-muted">
-        共 {ACHIEVEMENTS.length} 条成就，已启用 {enabledIds.size} 条
+        {enabledIds === null ? (
+          "加载中…"
+        ) : (
+          <>共 {ACHIEVEMENTS.length} 条成就，已启用 {enabledIds.size} 条</>
+        )}
       </p>
 
       <div className="flex flex-col gap-2.5">
+        {enabledIds === null && (
+          <p className="py-8 text-center text-xs text-muted">正在读取成就状态…</p>
+        )}
+
         {confirmingReset && (
           <div className="pastel-card flex items-center gap-2 p-2.5">
             <span className="flex-1 text-xs text-ink">
@@ -85,18 +93,19 @@ export default function AchievementManager() {
           </div>
         )}
 
-        {ACHIEVEMENTS.map((a) => (
-          <AchievementRow
-            key={a.id}
-            achievement={a}
-            enabled={enabledIds.has(a.id)}
-            confirmingDelete={confirmingDelete === a.id}
-            saving={saving}
-            onConfirmDelete={() => setConfirmingDelete(a.id)}
-            onCancelDelete={() => setConfirmingDelete(null)}
-            onDelete={() => handleDelete(a.id)}
-          />
-        ))}
+        {enabledIds !== null &&
+          ACHIEVEMENTS.map((a) => (
+            <AchievementRow
+              key={a.id}
+              achievement={a}
+              enabled={enabledIds.has(a.id)}
+              confirmingDelete={confirmingDelete === a.id}
+              saving={saving}
+              onConfirmDelete={() => setConfirmingDelete(a.id)}
+              onCancelDelete={() => setConfirmingDelete(null)}
+              onDelete={() => handleDelete(a.id)}
+            />
+          ))}
       </div>
     </div>
   );

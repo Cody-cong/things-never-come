@@ -32,11 +32,12 @@ async function readRemote(): Promise<Set<string> | null> {
   if (!isSupabaseEnabled() || !supabase) return null;
   const { data, error } = await supabase
     .from("achievement_settings")
-    .select("id, enabled")
-    .eq("enabled", true);
+    .select("id, enabled");
   if (error) throw error;
   if (!data || data.length === 0) return null;
-  return new Set(data.map((row) => String(row.id)));
+  return new Set(
+    data.filter((row) => row.enabled).map((row) => String(row.id))
+  );
 }
 
 async function writeRemoteRow(id: string, enabled: boolean): Promise<void> {
