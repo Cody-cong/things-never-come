@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { MapPin } from "lucide-react";
 import {
   getUserProfile,
@@ -53,12 +54,14 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-site px-4 py-6 md:px-8">
       <div className="rounded-2xl bg-white p-6 shadow-card">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-full bg-cream shadow-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="relative h-20 w-20 overflow-hidden rounded-full bg-cream shadow-card">
+            <Image
               src={avatar}
               alt="用户头像"
-              className="h-full w-full object-cover"
+              fill
+              sizes="80px"
+              className="object-cover"
+              priority
             />
           </div>
           <input
@@ -77,7 +80,7 @@ export default function ProfilePage() {
               <button
                 key={src}
                 onClick={() => handleAvatarChange(src)}
-                className={`h-12 w-12 overflow-hidden rounded-full transition ${
+                className={`relative h-12 w-12 overflow-hidden rounded-full transition ${
                   avatar === src
                     ? "ring-2 ring-accent ring-offset-2"
                     : "opacity-70 hover:opacity-100"
@@ -87,11 +90,12 @@ export default function ProfilePage() {
                 }`}
                 aria-pressed={avatar === src}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={src}
                   alt={`头像选项 ${idx + 1}`}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="48px"
+                  className="object-cover"
                 />
               </button>
             ))}

@@ -28,7 +28,10 @@ interface Piece {
 /** DOM + CSS 礼花效果，CSS 在 globals.css 中定义 */
 export default function Confetti() {
   const pieces = useMemo<Piece[]>(() => {
-    return Array.from({ length: 60 }, () => ({
+    // 移动端减少粒子数量，降低 GPU 压力
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const count = isMobile ? 30 : 60;
+    return Array.from({ length: count }, () => ({
       left: Math.random() * 100,
       delay: Math.random() * 0.6,
       duration: 2.5 + Math.random() * 2,
@@ -58,6 +61,7 @@ export default function Confetti() {
               animationDuration: `${p.duration}s`,
               "--rotate": `${p.rotate}deg`,
               "--drift": `${p.drift}px`,
+              willChange: "transform, opacity",
             } as React.CSSProperties
           }
         />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   setUserProfile,
   DEFAULT_PROFILE,
@@ -52,12 +53,14 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         </p>
 
         <div className="mt-6 flex justify-center">
-          <div className="h-20 w-20 overflow-hidden rounded-full bg-cream shadow-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="relative h-20 w-20 overflow-hidden rounded-full bg-cream shadow-card">
+            <Image
               src={avatar}
               alt="选中的头像"
-              className="h-full w-full object-cover"
+              fill
+              sizes="80px"
+              className="object-cover"
+              priority
             />
           </div>
         </div>
@@ -67,7 +70,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
             <button
               key={src}
               onClick={() => setAvatar(src)}
-              className={`h-12 w-12 overflow-hidden rounded-full transition ${
+              className={`relative h-12 w-12 overflow-hidden rounded-full transition ${
                 avatar === src
                   ? "ring-2 ring-accent ring-offset-2"
                   : "opacity-80 hover:opacity-100"
@@ -77,11 +80,12 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               }`}
               aria-pressed={avatar === src}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={src}
                 alt={`头像选项 ${idx + 1}`}
-                className="h-full w-full object-cover"
+                fill
+                sizes="48px"
+                className="object-cover"
               />
             </button>
           ))}

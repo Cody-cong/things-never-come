@@ -17,9 +17,21 @@ export const viewport: Viewport = {
   themeColor: "#FFF8F0",
 };
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="zh-CN">
+      <head>
+        <link rel="preconnect" href="https://api.deepseek.com" />
+        <link rel="dns-prefetch" href="https://api.deepseek.com" />
+        {SUPABASE_URL && (
+          <>
+            <link rel="preconnect" href={SUPABASE_URL} />
+            <link rel="dns-prefetch" href={SUPABASE_URL} />
+          </>
+        )}
+      </head>
       <body>
         <AppProviders>
           <div className="flex min-h-screen flex-col bg-cream">

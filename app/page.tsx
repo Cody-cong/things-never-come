@@ -7,9 +7,13 @@ import { getHotProducts } from "@/lib/product-store";
 import { getFaqs, type HomeFaq } from "@/lib/faq-store";
 import { addFeedback } from "@/lib/feedback-store";
 import { hasUserProfile, getUserProfile } from "@/lib/profile-store";
+import dynamic from "next/dynamic";
 import ProductCard from "@/components/ProductCard";
-import OnboardingModal from "@/components/OnboardingModal";
 import type { Product } from "@/lib/types";
+
+const OnboardingModal = dynamic(() => import("@/components/OnboardingModal"), {
+  ssr: false,
+});
 
 const STEPS = [
   { title: "挑选心仪商品" },
@@ -136,7 +140,9 @@ export default function HomePage() {
                       </div>
                     </div>
                   ))
-                : products.map((p) => <ProductCard key={p.id} product={p} />)}
+                : products.map((p, idx) => (
+                    <ProductCard key={p.id} product={p} priority={idx < 4} />
+                  ))}
             </div>
 
             {!loading && products.length === 0 && (

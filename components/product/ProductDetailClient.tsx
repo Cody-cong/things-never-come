@@ -7,9 +7,13 @@ import { ShoppingCart, Plus, Minus, Check, ChevronLeft } from "lucide-react";
 import { getProductById } from "@/lib/product-store";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import ProductImage from "@/components/ProductImage";
-import LimitAlertModal from "@/components/LimitAlertModal";
 import type { Product } from "@/lib/types";
+
+const LimitAlertModal = dynamic(() => import("@/components/LimitAlertModal"), {
+  ssr: false,
+});
 
 export default function ProductDetailClient() {
   const router = useRouter();
@@ -113,6 +117,8 @@ export default function ProductDetailClient() {
           <ProductImage
             src={product.image}
             alt={product.name}
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
           />
           {product.hot && (
             <span className="absolute left-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-bold text-white">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ImageOff } from "lucide-react";
 
 interface ProductImageProps {
@@ -9,6 +10,8 @@ interface ProductImageProps {
   className?: string;
   containerClassName?: string;
   lazy?: boolean;
+  priority?: boolean;
+  sizes?: string;
 }
 
 export default function ProductImage({
@@ -17,6 +20,8 @@ export default function ProductImage({
   className = "h-full w-full object-cover",
   containerClassName = "h-full w-full",
   lazy = true,
+  priority = false,
+  sizes = "(max-width: 768px) 50vw, 25vw",
 }: ProductImageProps) {
   const [failed, setFailed] = useState(false);
 
@@ -35,16 +40,18 @@ export default function ProductImage({
   }
 
   return (
-    <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+    <div className={`${containerClassName} relative`}>
+      <Image
         src={src}
         alt={alt}
+        fill
+        sizes={sizes}
         className={className}
-        loading={lazy ? "lazy" : undefined}
+        loading={lazy && !priority ? "lazy" : "eager"}
+        priority={priority || !lazy}
         decoding="async"
         onError={() => setFailed(true)}
       />
-    </>
+    </div>
   );
 }

@@ -214,12 +214,13 @@ export default function ProductManager() {
               {selectedIds.has(p.id) ? <SquareCheck size={20} /> : <Square size={20} />}
             </button>
             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-sand">
-              <ProductImage
-                src={p.image}
-                alt={p.name}
-                containerClassName="h-14 w-14"
-              />
-            </div>
+                <ProductImage
+                  src={p.image}
+                  alt={p.name}
+                  containerClassName="h-14 w-14"
+                  sizes="56px"
+                />
+              </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-ink">{p.name}</p>
               <div className="mt-1 flex flex-wrap items-center gap-2">

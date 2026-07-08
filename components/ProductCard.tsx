@@ -1,19 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "./ProductImage";
-import LimitAlertModal from "./LimitAlertModal";
+
+const LimitAlertModal = dynamic(() => import("./LimitAlertModal"), {
+  ssr: false,
+});
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const { items, addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
@@ -62,6 +67,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <ProductImage
             src={product.image}
             alt={product.name}
+            lazy={!priority}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>

@@ -12,13 +12,23 @@ import {
   type Achievement,
 } from "@/lib/achievement-store";
 import { checkSingleAchievement } from "@/lib/achievements";
+import dynamic from "next/dynamic";
 import ProductImage from "@/components/ProductImage";
-import LimitAlertModal from "@/components/LimitAlertModal";
-import ReceiptModal from "@/components/receipt/ReceiptModal";
-import AchievementModal from "@/components/AchievementModal";
 import { useState, useRef, useEffect } from "react";
 import { generateOrderReview } from "@/lib/ai-review";
 import type { Order } from "@/lib/types";
+
+const LimitAlertModal = dynamic(() => import("@/components/LimitAlertModal"), {
+  ssr: false,
+});
+const ReceiptModal = dynamic(
+  () => import("@/components/receipt/ReceiptModal"),
+  { ssr: false }
+);
+const AchievementModal = dynamic(
+  () => import("@/components/AchievementModal"),
+  { ssr: false }
+);
 
 export default function CartPage() {
   const router = useRouter();
@@ -147,6 +157,7 @@ export default function CartPage() {
                 <ProductImage
                   src={item.image}
                   alt={item.name}
+                  sizes="96px"
                 />
               </Link>
 
