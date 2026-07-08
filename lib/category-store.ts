@@ -8,6 +8,7 @@ import { readLocal, writeLocal, isValidArray } from "./storage-utils";
  * - 读取时合并本地与云端，本地数据不会被云端覆盖。
  * - 本地有而云端没有的分类会自动补回云端。
  * - 新增/更新/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
+ * - 不会删除云端独有的分类，避免多设备/多管理员场景下误删他人数据。
  */
 const KEY = "gnc_categories_v1";
 
@@ -30,19 +31,8 @@ async function syncRemote(list: string[]): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
 
   const remoteNames = await readRemote();
-  const localSet = new Set(list);
   const remoteSet = new Set(remoteNames);
-
-  const toDelete = remoteNames.filter((name) => !localSet.has(name));
   const toInsert = list.filter((name) => !remoteSet.has(name));
-
-  if (toDelete.length > 0) {
-    const { error } = await supabase
-      .from("categories")
-      .delete()
-      .in("name", toDelete);
-    if (error) throw error;
-  }
 
   if (toInsert.length > 0) {
     const { error } = await supabase

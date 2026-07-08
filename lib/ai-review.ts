@@ -19,8 +19,8 @@ function buildPrompt(order: Order): string {
 ${items}`;
 }
 
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+function formatPrice(amount: number): string {
+  return `$${amount.toFixed(2)}`;
 }
 
 export async function generateOrderReview(order: Order): Promise<string> {
@@ -67,11 +67,11 @@ function getFallbackReview(order: Order): string {
   const total = order.totalAmount;
   const qty = order.items.reduce((s, i) => s + i.quantity, 0);
 
-  if (total >= 1_000_000_000_00) {
+  if (total >= 1_000_000_000_000) {
     return "富可敌国！这一单下去，马斯克都得找你借钱喝咖啡。建议直接收购网站，以后全场免费。";
   }
-  if (total >= 1_000_000_00) {
-    return "出手就是百万级，老板豪气！快递小哥看到金额，可能会亲自开直升机送货。";
+  if (total >= 100_000_000) {
+    return "出手就是百亿级，老板豪气！快递小哥看到金额，可能会亲自开直升机送货。";
   }
   if (qty >= 20) {
     return "买这么多，是打算开超市吗？购物车已经累到想辞职了。";

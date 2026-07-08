@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import AdminGuard from "../components/AdminGuard";
-import FaqManager from "../FaqManager";
+import FaqManager from "../components/FaqManager";
 
 export default function AdminFaqsPage() {
   return (

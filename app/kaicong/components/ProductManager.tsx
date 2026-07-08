@@ -13,7 +13,7 @@ import {
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "@/components/ProductImage";
 import type { Product } from "@/lib/types";
-import ProductForm from "../ProductForm";
+import ProductForm from "./ProductForm";
 
 export default function ProductManager() {
   const [list, setList] = useState<Product[]>([]);

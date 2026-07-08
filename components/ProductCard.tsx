@@ -93,14 +93,15 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Minus size={14} />
             </button>
             <input
-              type="text"
+              type="number"
               inputMode="numeric"
+              min={1}
               value={quantity}
               onChange={(e) => {
-                const v = parseInt(e.target.value.replace(/\D/g, ""), 10);
+                const v = parseInt(e.target.value, 10);
                 setQuantity(isNaN(v) || v < 1 ? 1 : v);
               }}
-              className="w-7 bg-transparent text-center text-sm font-medium text-ink outline-none"
+              className="w-7 bg-transparent text-center text-sm font-medium text-ink outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               aria-label="购买数量"
             />
             <button

@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 const AUTH_KEY = "gnc_admin_auth";
-const ADMIN_PASSWORD = "kaicong";
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "";
 
 export default function AdminGuard({ children }: { children: ReactNode }) {
   const [authed, setAuthed] = useState(false);
@@ -19,7 +19,7 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
   }, []);
 
   function handleLogin() {
-    if (password === ADMIN_PASSWORD) {
+    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
       setAuthed(true);
       setError(false);
       try {

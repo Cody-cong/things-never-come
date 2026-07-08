@@ -11,6 +11,7 @@ import {
   getAchievements,
   type Achievement,
 } from "@/lib/achievement-store";
+import { checkSingleAchievement } from "@/lib/achievements";
 import ProductImage from "@/components/ProductImage";
 import LimitAlertModal from "@/components/LimitAlertModal";
 import ReceiptModal from "@/components/receipt/ReceiptModal";
@@ -231,12 +232,14 @@ export default function CartPage() {
 
           {/* 成就进度提示 */}
           {enabledAchievements.map((a) => {
-            const met =
-              (a.id === "small_goal" && totalAmount >= 100_000_000) ||
-              (a.id === "magnate" && totalAmount >= 1_000_000_000_000) ||
-              (a.id === "card_swiper" &&
-                new Set(items.map((i) => i.productId)).size >= 15);
-            if (!met) return null;
+            const previewOrder: Order = {
+              id: "",
+              items,
+              totalAmount,
+              createdAt: 0,
+              status: "pending",
+            };
+            if (!checkSingleAchievement(a, previewOrder)) return null;
             return (
               <p
                 key={a.id}

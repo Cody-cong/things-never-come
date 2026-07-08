@@ -150,12 +150,26 @@ export default function FaqManager() {
               type="text"
               value={newQ}
               onChange={(e) => setNewQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setAdding(false);
+                  setNewQ("");
+                  setNewA("");
+                }
+              }}
               placeholder="问题"
               className={inputCls}
             />
             <textarea
               value={newA}
               onChange={(e) => setNewA(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setAdding(false);
+                  setNewQ("");
+                  setNewA("");
+                }
+              }}
               placeholder="回答"
               rows={2}
               className={textareaCls}
@@ -192,11 +206,17 @@ export default function FaqManager() {
                   type="text"
                   value={editQ}
                   onChange={(e) => setEditQ(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setEditingId(null);
+                  }}
                   className={inputCls}
                 />
                 <textarea
                   value={editA}
                   onChange={(e) => setEditA(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setEditingId(null);
+                  }}
                   rows={2}
                   className={textareaCls}
                 />

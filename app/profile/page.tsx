@@ -113,6 +113,7 @@ export default function ProfilePage() {
           id="address-input"
           type="text"
           value={address}
+          maxLength={200}
           onChange={(e) => setAddress(e.target.value)}
           onBlur={handleAddressBlur}
           placeholder={DEFAULT_ADDRESS}

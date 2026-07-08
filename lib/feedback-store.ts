@@ -121,7 +121,8 @@ export async function addFeedback(content: string): Promise<Feedback> {
 
 /** 删除反馈 */
 export async function deleteFeedback(id: string): Promise<void> {
-  const list = parseLocalFeedbacks().filter((f) => f.id !== id);
+  const all = await readAll();
+  const list = all.filter((f) => f.id !== id);
   writeLocal(KEY, list);
   try {
     await removeRemote(id);

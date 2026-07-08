@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import AdminGuard from "../components/AdminGuard";
-import AchievementManager from "../AchievementManager";
+import AchievementManager from "../components/AchievementManager";
 
 export default function AdminAchievementsPage() {
   return (

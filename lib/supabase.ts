@@ -3,10 +3,17 @@ import type { Product } from "./types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseWriteKey = process.env.NEXT_PUBLIC_SUPABASE_WRITE_KEY ?? "";
 
 export const supabase =
   supabaseUrl && supabaseKey
-    ? createClient(supabaseUrl, supabaseKey)
+    ? createClient(supabaseUrl, supabaseKey, {
+        global: {
+          headers: {
+            "x-write-key": supabaseWriteKey,
+          },
+        },
+      })
     : undefined;
 
 export function isSupabaseEnabled(): boolean {

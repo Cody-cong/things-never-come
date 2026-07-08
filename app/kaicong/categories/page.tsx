@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import AdminGuard from "../components/AdminGuard";
-import CategoryManager from "../CategoryManager";
+import CategoryManager from "../components/CategoryManager";
 
 export default function AdminCategoriesPage() {
   return (

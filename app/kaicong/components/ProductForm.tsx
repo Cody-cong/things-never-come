@@ -21,6 +21,7 @@ interface FormState {
   hot: boolean;
   maxQuantity: string;
   limitMessage: string;
+  specs: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -33,6 +34,7 @@ const EMPTY_FORM: FormState = {
   hot: false,
   maxQuantity: "",
   limitMessage: "",
+  specs: "默认",
 };
 
 function toForm(p: Product): FormState {
@@ -46,6 +48,7 @@ function toForm(p: Product): FormState {
     hot: p.hot,
     maxQuantity: p.maxQuantity ? String(p.maxQuantity) : "",
     limitMessage: p.limitMessage ?? "",
+    specs: p.specs.join(","),
   };
 }
 
@@ -65,6 +68,7 @@ export default function ProductForm({
   );
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [cats, setCats] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -98,31 +102,41 @@ export default function ProductForm({
   }
 
   async function handleSave() {
-    if (!validate()) return;
-    const price = Number(form.price);
-    const maxQuantityNum = form.maxQuantity.trim()
-      ? Number(form.maxQuantity.trim())
-      : undefined;
-    const input: ProductInput = {
-      name: form.name.trim(),
-      nameEn: form.nameEn.trim(),
-      image: form.image.trim(),
-      price,
-      category: form.category,
-      description: form.description.trim(),
-      hot: form.hot,
-      maxQuantity:
-        maxQuantityNum !== undefined && maxQuantityNum > 0
-          ? maxQuantityNum
-          : undefined,
-      limitMessage: form.limitMessage.trim() || undefined,
-    };
-    if (isEdit && initial) {
-      await updateProduct(initial.id, input);
-    } else {
-      await addProduct(input);
+    if (saving || !validate()) return;
+    setSaving(true);
+    try {
+      const price = Number(form.price);
+      const maxQuantityNum = form.maxQuantity.trim()
+        ? Number(form.maxQuantity.trim())
+        : undefined;
+      const specs = form.specs
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const input: ProductInput = {
+        name: form.name.trim(),
+        nameEn: form.nameEn.trim(),
+        image: form.image.trim(),
+        price,
+        category: form.category,
+        description: form.description.trim(),
+        hot: form.hot,
+        maxQuantity:
+          maxQuantityNum !== undefined && maxQuantityNum > 0
+            ? maxQuantityNum
+            : undefined,
+        limitMessage: form.limitMessage.trim() || undefined,
+        specs: specs.length > 0 ? specs : ["默认"],
+      };
+      if (isEdit && initial) {
+        await updateProduct(initial.id, input);
+      } else {
+        await addProduct(input);
+      }
+      onSaved();
+    } finally {
+      setSaving(false);
     }
-    onSaved();
   }
 
   const inputCls =
@@ -208,6 +222,15 @@ export default function ProductForm({
       </select>
       {errors.category && <p className={errorCls}>{errors.category}</p>}
 
+      <label className={`mt-3 ${labelCls}`}>规格（用英文逗号分隔）</label>
+      <input
+        type="text"
+        value={form.specs}
+        onChange={(e) => update("specs", e.target.value)}
+        placeholder="例如：默认, 大号, 小号"
+        className={inputCls}
+      />
+
       <label className={`mt-3 ${labelCls}`}>购买数量上限</label>
       <input
         type="number"
@@ -250,15 +273,17 @@ export default function ProductForm({
       <div className="mt-5 flex gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 rounded-full border border-blush py-2.5 text-sm font-medium text-ink"
+          disabled={saving}
+          className="flex-1 rounded-full border border-blush py-2.5 text-sm font-medium text-ink disabled:opacity-50"
         >
           取消
         </button>
         <button
           onClick={handleSave}
-          className="flex-[2] rounded-full bg-accent py-2.5 text-sm font-medium text-white active:scale-95"
+          disabled={saving}
+          className="flex-[2] rounded-full bg-accent py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          保存
+          {saving ? "保存中…" : "保存"}
         </button>
       </div>
     </div>
