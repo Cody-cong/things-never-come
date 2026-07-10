@@ -134,6 +134,8 @@ export default function ProductForm({
         await addProduct(input);
       }
       onSaved();
+    } catch (e) {
+      alert(`保存失败：${e instanceof Error ? e.message : String(e)}\n请检查 Supabase 写入密钥是否配置正确。`);
     } finally {
       setSaving(false);
     }

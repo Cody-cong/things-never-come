@@ -37,15 +37,23 @@ export default function ProductManager() {
   }
 
   async function handleDelete(id: string) {
-    await deleteProduct(id);
-    setConfirmingDelete(null);
-    refresh();
+    try {
+      await deleteProduct(id);
+      setConfirmingDelete(null);
+      refresh();
+    } catch (e) {
+      alert(`删除失败：${e instanceof Error ? e.message : String(e)}\n请检查 Supabase 写入密钥是否配置正确。`);
+    }
   }
 
   async function handleDeleteAll() {
-    await deleteAllProducts();
-    setConfirmingDeleteAll(false);
-    refresh();
+    try {
+      await deleteAllProducts();
+      setConfirmingDeleteAll(false);
+      refresh();
+    } catch (e) {
+      alert(`清空失败：${e instanceof Error ? e.message : String(e)}\n请检查 Supabase 写入密钥是否配置正确。`);
+    }
   }
 
   function toggleSelect(id: string) {
@@ -67,15 +75,23 @@ export default function ProductManager() {
 
   async function handleBatchDelete() {
     if (selectedIds.size === 0) return;
-    await deleteProducts(Array.from(selectedIds));
-    setSelectedIds(new Set());
-    setConfirmingBatchDelete(false);
-    refresh();
+    try {
+      await deleteProducts(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      setConfirmingBatchDelete(false);
+      refresh();
+    } catch (e) {
+      alert(`批量删除失败：${e instanceof Error ? e.message : String(e)}\n请检查 Supabase 写入密钥是否配置正确。`);
+    }
   }
 
   async function handleToggleHot(p: Product) {
-    await updateProduct(p.id, { hot: !p.hot });
-    refresh();
+    try {
+      await updateProduct(p.id, { hot: !p.hot });
+      refresh();
+    } catch (e) {
+      alert(`更新失败：${e instanceof Error ? e.message : String(e)}\n请检查 Supabase 写入密钥是否配置正确。`);
+    }
   }
 
   if (editing !== null) {
