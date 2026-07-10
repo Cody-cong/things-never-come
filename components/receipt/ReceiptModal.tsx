@@ -43,17 +43,17 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
 
   return (
     <div
-      className="receipt-modal-overlay fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
+      className="receipt-modal-overlay fixed inset-0 z-[70] flex min-h-dvh items-end justify-center bg-ink/50 p-4 backdrop-blur-sm sm:items-center"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="receipt-title"
     >
       <div
-        className="receipt-modal-panel w-full max-w-xl rounded-3xl bg-cream p-4 shadow-float sm:p-6"
+        className="receipt-modal-panel flex w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-cream p-4 shadow-float sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="receipt-modal-header mb-4 flex items-center justify-between no-print">
+        <div className="receipt-modal-header mb-4 flex shrink-0 items-center justify-between no-print">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-light">
               <FileText size={18} className="text-accent" />
@@ -74,11 +74,11 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
           </button>
         </div>
 
-        <div ref={receiptRef}>
+        <div ref={receiptRef} className="min-h-0 overflow-y-auto">
           <ReceiptContent order={order} />
         </div>
 
-        <div className="receipt-modal-footer mt-4 flex items-center gap-3 no-print">
+        <div className="receipt-modal-footer mt-4 flex shrink-0 items-center gap-3 pb-safe no-print">
           <button
             onClick={handleSaveImage}
             disabled={saving}

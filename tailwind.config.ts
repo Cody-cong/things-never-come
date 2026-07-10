@@ -57,6 +57,9 @@ const config: Config = {
       maxWidth: {
         "site": "1120px",
       },
+      padding: {
+        safe: "env(safe-area-inset-bottom)",
+      },
     },
   },
   plugins: [],
