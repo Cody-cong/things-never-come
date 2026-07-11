@@ -66,42 +66,16 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Product[]> {
-  const { list: local, isEmptyByUser } = parseLocalProducts();
+  const { list: local } = parseLocalProducts();
   if (!isSupabaseEnabled()) return local;
 
   try {
     const remote = await readRemote();
 
-    // 用户已手动清空本地商品（localStorage 中存在 KEY 且为空数组），
-    // 此时不再从云端补充旧数据，避免删除后一刷新又恢复。
-    if (isEmptyByUser) {
-      return local;
-    }
-
-    const remoteMap = new Map(remote.map((p) => [p.id, p]));
-    const localMap = new Map(local.map((p) => [p.id, p]));
-
-    // 合并：以本地为基准，补充云端独有的商品，避免本地数据被覆盖。
-    const merged = [...local];
-    for (const p of remote) {
-      if (!localMap.has(p.id)) merged.push(p);
-    }
-
-    writeLocal(KEY, merged);
-
-    // 把本地有但云端没有的商品并行补回云端（修复之前同步失败的数据）。
-    const missing = merged.filter((p) => !remoteMap.has(p.id));
-    if (missing.length > 0) {
-      await Promise.all(
-        missing.map((p) =>
-          writeRemote(p).catch((e) => {
-            console.warn("[product-store] 补同步商品失败", p.id, e);
-          })
-        )
-      );
-    }
-
-    return merged;
+    // Supabase 为单一事实来源。只要配置并读取成功，就使用云端数据并覆盖本地，
+    // 避免本地旧数据（包括其他设备/浏览器残留数据）被重新同步回云端。
+    writeLocal(KEY, remote);
+    return remote;
   } catch (e) {
     console.warn("[product-store] 读取 Supabase 失败，回退到 localStorage", e);
     return local;
