@@ -6,8 +6,9 @@ import { readLocal, writeLocal, isValidArray } from "./storage-utils";
  * 商品持久层：优先同步到 Supabase（多端互通），未配置或离线时回退到 localStorage。
  *
  * 同步策略：
- * - 读取时合并本地与云端，本地数据不会被云端覆盖。
- * - 本地有而云端没有的商品会自动补回云端（修复历史数据）。
+ * - 当 Supabase 可用且读取成功时，以云端为单一事实来源，并用云端数据覆盖本地缓存，
+ *   防止其他设备/浏览器残留的旧数据被重新同步回云端。
+ * - 未配置 Supabase 或读取失败时，回退到 localStorage。
  * - 新增/更新/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
  */
 const KEY = "gnc_products_v1";
@@ -15,7 +16,7 @@ const KEY = "gnc_products_v1";
 /** 管理端可编辑字段子集 */
 export interface ProductInput {
   name: string;
-  nameEn?: string;
+  nameEn: string;
   image: string;
   price: number;
   originalPrice?: number;
@@ -113,7 +114,7 @@ export async function addProduct(input: ProductInput): Promise<Product> {
     id: `p${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     shopId: "admin",
     name: input.name,
-    nameEn: input.nameEn?.trim() || undefined,
+    nameEn: input.nameEn.trim(),
     image: input.image,
     price: input.price,
     originalPrice: input.originalPrice,

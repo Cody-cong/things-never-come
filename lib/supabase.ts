@@ -26,7 +26,7 @@ export function rowToProduct(row: Record<string, unknown>): Product {
     id: String(row.id),
     shopId: String(row.shop_id ?? "admin"),
     name: String(row.name),
-    nameEn: row.name_en ? String(row.name_en) : undefined,
+    nameEn: String(row.name_en ?? ""),
     image: String(row.image),
     price: Number(row.price),
     originalPrice: row.original_price ? Number(row.original_price) : undefined,

@@ -1,4 +1,8 @@
 -- 在 Supabase 控制台 -> SQL Editor -> New query 中粘贴并运行
+--
+-- ⚠️ 安全警告：运行前必须将本文件底部的 __REPLACE_WITH_STRONG_WRITE_KEY__
+-- 替换为一个长度足够、随机生成的强密码，并在 GitHub Secrets 中设置
+-- NEXT_PUBLIC_SUPABASE_WRITE_KEY 为相同值。如果保留占位符，写入接口将不可用。
 
 -- 商品表
 CREATE TABLE IF NOT EXISTS products (
@@ -69,44 +73,44 @@ DROP POLICY IF EXISTS "Allow anonymous write feedbacks" ON feedbacks;
 DROP POLICY IF EXISTS "Allow anonymous read achievement_settings" ON achievement_settings;
 DROP POLICY IF EXISTS "Allow anonymous write achievement_settings" ON achievement_settings;
 
--- 写入密钥占位符：运行前请把下方所有 'kaicong' 替换为随机强密码，
+-- 写入密钥占位符：下方所有 '__REPLACE_WITH_STRONG_WRITE_KEY__' 必须替换为随机强密码，
 -- 并在 GitHub Secrets 中设置 NEXT_PUBLIC_SUPABASE_WRITE_KEY 为相同值。
 CREATE POLICY "Allow anonymous read products"
   ON products FOR SELECT TO anon USING (true);
 
 CREATE POLICY "Allow anonymous write products"
   ON products FOR ALL TO anon
-  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong')
-  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong');
+  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__')
+  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__');
 
 CREATE POLICY "Allow anonymous read categories"
   ON categories FOR SELECT TO anon USING (true);
 
 CREATE POLICY "Allow anonymous write categories"
   ON categories FOR ALL TO anon
-  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong')
-  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong');
+  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__')
+  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__');
 
 CREATE POLICY "Allow anonymous read faqs"
   ON faqs FOR SELECT TO anon USING (true);
 
 CREATE POLICY "Allow anonymous write faqs"
   ON faqs FOR ALL TO anon
-  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong')
-  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong');
+  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__')
+  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__');
 
 CREATE POLICY "Allow anonymous read feedbacks"
   ON feedbacks FOR SELECT TO anon USING (true);
 
 CREATE POLICY "Allow anonymous write feedbacks"
   ON feedbacks FOR ALL TO anon
-  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong')
-  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong');
+  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__')
+  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__');
 
 CREATE POLICY "Allow anonymous read achievement_settings"
   ON achievement_settings FOR SELECT TO anon USING (true);
 
 CREATE POLICY "Allow anonymous write achievement_settings"
   ON achievement_settings FOR ALL TO anon
-  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong')
-  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = 'kaicong');
+  USING (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__')
+  WITH CHECK (current_setting('request.headers', true)::json ->> 'x-write-key' = '__REPLACE_WITH_STRONG_WRITE_KEY__');

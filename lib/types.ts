@@ -24,7 +24,7 @@ export interface Product {
   id: string;
   shopId: string; // 保留以兼容 CartItem，不再用于导航
   name: string;
-  nameEn?: string; // 英文名称（管理端可填写，商品详情页显示在中文名下一行）
+  nameEn: string; // 英文名称（商品详情页显示在中文名下一行）
   image: string;
   price: number;
   originalPrice?: number;

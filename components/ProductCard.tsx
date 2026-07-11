@@ -77,9 +77,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <p className="line-clamp-1 text-[15px] font-semibold text-ink transition group-hover:text-accent">
             {product.name}
           </p>
-          {product.nameEn && (
-            <p className="line-clamp-1 text-xs text-muted">{product.nameEn}</p>
-          )}
+          <p className="line-clamp-1 text-xs text-muted">{product.nameEn}</p>
         </Link>
         <span className="text-base font-bold text-accent">
           {formatPrice(product.price)}

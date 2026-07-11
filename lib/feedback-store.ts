@@ -98,8 +98,7 @@ async function readAll(): Promise<Feedback[]> {
 
 /** 返回全部反馈，按时间倒序 */
 export async function getFeedbacks(): Promise<Feedback[]> {
-  const list = await readAll();
-  return list.sort((a, b) => b.createdAt - a.createdAt);
+  return readAll();
 }
 
 /** 新增反馈 */

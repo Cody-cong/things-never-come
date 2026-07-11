@@ -137,9 +137,7 @@ export default function ProductDetailClient() {
             )}
           </div>
           <h1 className="mt-3 text-2xl font-bold text-ink md:text-3xl">{product.name}</h1>
-          {product.nameEn && (
-            <p className="mt-1 text-sm text-muted">{product.nameEn}</p>
-          )}
+          <p className="mt-1 text-sm text-muted">{product.nameEn}</p>
           <div className="mt-6">
             <h2 className="mb-3 text-sm font-bold text-ink">规格</h2>
             <div
