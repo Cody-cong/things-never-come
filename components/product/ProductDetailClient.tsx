@@ -238,7 +238,7 @@ export default function ProductDetailClient() {
 
           <div className="mt-6">
             <h2 className="mb-2 text-sm font-bold text-ink">商品详情</h2>
-            <p className="text-sm leading-relaxed text-muted">{product.description}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">{product.description}</p>
           </div>
 
           <div className="mt-8 flex items-center gap-3">
