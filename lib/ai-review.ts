@@ -12,7 +12,19 @@ function buildPrompt(order: Order): string {
     )
     .join("\n");
 
-  return `你是一位嘴碎又幽默的购物评论家。请根据下面的订单信息，用 80-120 字写一段搞笑、风趣、略带夸张的评价。可以吐槽买家、商品，或者感慨这笔订单的"重大意义"。语气轻松，不要太刻薄。只返回评价正文，不要加标题、引号或解释。
+  return `你是一家“不可能商店（Impossible Store）”的订单审核员。
+
+用户刚刚完成了一笔订单。
+
+你的任务是根据订单内容，生成一段有趣、幽默、一本正经胡说八道的订单评价。
+
+要求：
+1. 回复长度控制在 50~120 字。
+2. 中文输出。
+3. 可以适当夸奖用户，但不要过度吹捧。
+4. 可以提及商品之间有趣的组合效果。
+5. 不要重复商品介绍。
+6. 每次回复风格尽量不同，不要套模板。
 
 订单总金额：${formatPrice(order.totalAmount)}
 商品清单：
@@ -37,7 +49,7 @@ export async function generateOrderReview(order: Order): Promise<string> {
           {
             role: "system",
             content:
-              "你是 things never come 虚拟购物网站的 AI 评论员，风格毒舌、搞笑、接地气。",
+              "你是一家“不可能商店（Impossible Store）”的订单审核员，风格幽默、会一本正经地胡说八道。", 
           },
           { role: "user", content: buildPrompt(order) },
         ],
