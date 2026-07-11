@@ -8,10 +8,8 @@ import { getProductById } from "@/lib/product-store";
 import { formatPrice } from "@/lib/utils";
 import {
   checkAchievements,
-  getAchievements,
   type Achievement,
 } from "@/lib/achievement-store";
-import { checkSingleAchievement } from "@/lib/achievements";
 import dynamic from "next/dynamic";
 import ProductImage from "@/components/ProductImage";
 import { useState, useRef, useEffect } from "react";
@@ -41,20 +39,7 @@ export default function CartPage() {
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
-  const [enabledAchievements, setEnabledAchievements] = useState<Achievement[]>([]);
   const lastOrderRef = useRef<Order | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      const list = await getAchievements();
-      if (mounted) setEnabledAchievements(list);
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   async function handleCheckout() {
     if (submitting || items.length === 0) return;
@@ -240,26 +225,6 @@ export default function CartPage() {
           <p className="mt-2 text-xs text-muted">
             不会扣除真实资金，纯模拟结算。
           </p>
-
-          {/* 成就进度提示 */}
-          {enabledAchievements.map((a) => {
-            const previewOrder: Order = {
-              id: "",
-              items,
-              totalAmount,
-              createdAt: 0,
-              status: "pending",
-            };
-            if (!checkSingleAchievement(a, previewOrder)) return null;
-            return (
-              <p
-                key={a.id}
-                className="mt-1 rounded-full bg-accent-light px-3 py-1 text-center text-xs font-medium text-accent first:mt-2"
-              >
-                {a.icon} 结算后解锁：{a.title}
-              </p>
-            );
-          })}
 
           <button
             onClick={handleCheckout}
