@@ -35,6 +35,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <link rel="preconnect" href="https://api.deepseek.com" />
         <link rel="dns-prefetch" href="https://api.deepseek.com" />
+        <link rel="preconnect" href="https://trae-api-cn.mchost.guru" />
+        <link rel="dns-prefetch" href="https://trae-api-cn.mchost.guru" />
         {SUPABASE_URL && (
           <>
             <link rel="preconnect" href={SUPABASE_URL} />

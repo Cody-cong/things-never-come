@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
-import TakeoutBoxIcon from "@/components/TakeoutBoxIcon";
+import Logo from "@/components/Logo";
 
 const NAVS = [
   { href: "/", label: "首页" },
@@ -73,17 +73,7 @@ export default function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-site items-center justify-between px-6 py-4 md:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <TakeoutBoxIcon size={36} />
-          <div className="flex flex-col leading-none">
-            <span className="text-xl font-black tracking-tight text-accent">
-              things never come
-            </span>
-            <span className="text-[10px] font-semibold tracking-wide text-muted">
-              Order Things. Get Nothing.
-            </span>
-          </div>
-        </Link>
+        <Logo size={36} />
 
         <nav className="hidden items-center gap-8 md:flex">
           {NAVS.map(({ href, label }) => {

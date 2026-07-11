@@ -226,10 +226,6 @@ export default function CartPage() {
           <p className="mt-1 text-3xl font-bold text-accent">
             {formatPrice(totalAmount)}
           </p>
-          <p className="mt-2 text-xs text-muted">
-            不会扣除真实资金，纯模拟结算。
-          </p>
-
           <RippleButton
             onClick={handleCheckout}
             disabled={submitting || items.length === 0}

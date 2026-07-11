@@ -95,7 +95,9 @@ export default function CategoryListClient() {
                 </div>
               </div>
             ))
-          : list.map((p) => <ProductCard key={p.id} product={p} />)}
+          : list.map((p, idx) => (
+              <ProductCard key={p.id} product={p} priority={idx < 4} />
+            ))}
       </div>
 
       {!loading && list.length === 0 && (

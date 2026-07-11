@@ -84,8 +84,8 @@ export default function SearchPage() {
               </p>
             )}
             <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-              {pageResults.map((p) => (
-                <ProductCard key={p.id} product={p} />
+              {pageResults.map((p, idx) => (
+                <ProductCard key={p.id} product={p} priority={idx < 4} />
               ))}
             </div>
 

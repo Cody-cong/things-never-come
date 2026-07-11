@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const LINKS = [
   { href: "/", label: "首页" },
@@ -11,9 +12,7 @@ export default function Footer() {
     <footer className="w-full border-t border-ink/5 bg-white">
       <div className="mx-auto max-w-site px-6 py-12 md:px-8">
         <div className="flex flex-col items-center gap-6">
-          <Link href="/" className="text-xl font-bold text-ink">
-            things never come
-          </Link>
+          <Logo size={36} showTagline={false} />
           <p className="max-w-md text-center text-sm text-muted">
             一个为剁手党开发的虚拟购物模拟器，灵感源自网站
             <a

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/cart-context";
-import { useToast } from "@/lib/toast-context";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "./ProductImage";
 import RippleButton from "./RippleButton";
@@ -22,7 +21,6 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const { items, addItem } = useCart();
-  const { showToast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
@@ -93,7 +91,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       quantity,
     });
     setQuantity(1);
-    showToast("已加入购物车，正在准备不发货", <ShoppingCart size={14} />);
     flyToCart(e.currentTarget);
   }
 
