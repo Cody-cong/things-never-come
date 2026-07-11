@@ -24,6 +24,10 @@ const ReceiptModal = dynamic(
   () => import("@/components/receipt/ReceiptModal"),
   { ssr: false }
 );
+const OrderTrackingModal = dynamic(
+  () => import("@/components/OrderTrackingModal"),
+  { ssr: false }
+);
 const AchievementModal = dynamic(
   () => import("@/components/AchievementModal"),
   { ssr: false }
@@ -38,6 +42,7 @@ export default function CartPage() {
     message: "",
   });
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [achievementQueue, setAchievementQueue] = useState<Achievement[]>([]);
   const lastOrderRef = useRef<Order | null>(null);
@@ -57,6 +62,7 @@ export default function CartPage() {
       addOrder(order);
       clearCart();
       lastOrderRef.current = order;
+      setShowReceipt(false);
       setLastOrder(order);
 
       // 异步生成 AI 搞笑评价，完成后持久化到订单
@@ -75,6 +81,7 @@ export default function CartPage() {
 
   async function handleReceiptClose() {
     const order = lastOrderRef.current;
+    setShowReceipt(false);
     setLastOrder(null);
     if (order) {
       const unlocked = await checkAchievements(order);
@@ -250,7 +257,14 @@ export default function CartPage() {
         />
       )}
 
-      {lastOrder && (
+      {lastOrder && !showReceipt && (
+        <OrderTrackingModal
+          order={lastOrder}
+          onComplete={() => setShowReceipt(true)}
+        />
+      )}
+
+      {lastOrder && showReceipt && (
         <ReceiptModal
           order={lastOrder}
           onClose={handleReceiptClose}
