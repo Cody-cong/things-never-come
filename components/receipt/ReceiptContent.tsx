@@ -1,16 +1,41 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-import ProductImage from "@/components/ProductImage";
+import { useMemo } from "react";
 import { formatPrice } from "@/lib/utils";
 import type { Order } from "@/lib/types";
+import Barcode from "./Barcode";
+
+const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+function pad(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function formatDateWithWeekday(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getFullYear()}年${pad(d.getMonth() + 1)}月${pad(d.getDate())}日 ${WEEKDAYS[d.getDay()]}`;
+}
 
 function formatTime(ts: number): string {
   const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function getDayNumber(ts: number): number {
+  const base = new Date("2025-01-01T00:00:00+08:00").getTime();
+  return Math.max(1, Math.floor((ts - base) / (1000 * 60 * 60 * 24)));
+}
+
+function getMood(review?: string): { icon: string; label: string } {
+  if (!review) return { icon: "🦖", label: "棒呆了" };
+  const text = review.toLowerCase();
+  if (text.includes("惨") || text.includes("亏") || text.includes("后悔")) {
+    return { icon: "🥲", label: "有点惨" };
+  }
+  if (text.includes("赚") || text.includes("值") || text.includes("不错")) {
+    return { icon: "😎", label: "赚了" };
+  }
+  return { icon: "🦖", label: "棒呆了" };
 }
 
 interface ReceiptContentProps {
@@ -21,90 +46,139 @@ export default function ReceiptContent({ order }: ReceiptContentProps) {
   const items = Array.isArray(order?.items) ? order.items : [];
   const totalQty = items.reduce((s, i) => s + (Number(i.quantity) || 0), 0);
   const totalAmount = Number(order?.totalAmount) || 0;
+  const dayNo = useMemo(() => getDayNumber(order.createdAt), [order.createdAt]);
+  const mood = useMemo(() => getMood(order.aiReview), [order.aiReview]);
 
   return (
-    <div className="receipt-paper relative overflow-hidden rounded-2xl bg-white p-6 shadow-card sm:p-8 md:p-10">
-      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-accent-light/40" />
-      <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-cream" />
+    <div className="receipt-paper receipt-font relative mx-auto max-w-md overflow-hidden bg-[#F9F5E9] px-6 pb-10 pt-10 text-ink shadow-card">
+      <div className="receipt-zigzag-top absolute left-0 right-0 top-0 h-3" />
 
-      <div className="relative">
-        <div className="text-center">
-          <p className="text-xl font-bold text-ink">things never come</p>
+      <div className="text-center">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
+          things never come / order archive
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">
+          Memory Receipt
+        </h1>
+        <p className="mt-1 text-xs tracking-widest text-muted">
+          — MEMORY RECEIPT —
+        </p>
+      </div>
+
+      <div className="mt-8 space-y-1.5 text-xs">
+        <div className="flex justify-between">
+          <span className="uppercase text-muted">Date</span>
+          <span className="font-medium">{formatDateWithWeekday(order.createdAt)}</span>
         </div>
-
-        <div className="mt-8 border-b-2 border-dashed border-cream pb-6">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted">单号</span>
-            <span className="font-medium text-ink">{order.id}</span>
-          </div>
-          <div className="mt-2 flex justify-between text-sm">
-            <span className="text-muted">时间</span>
-            <span className="font-medium text-ink">
-              {formatTime(order.createdAt)}
-            </span>
-          </div>
+        <div className="flex justify-between">
+          <span className="uppercase text-muted">Receipt</span>
+          <span className="font-medium">#{order.id}</span>
         </div>
-
-        <div className="mt-6 space-y-4">
-          {items.map((item) => (
-            <div
-              key={`${item.productId}-${item.spec}`}
-              className="flex items-center gap-3"
-            >
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-cream">
-                <ProductImage
-                  src={item.image}
-                  alt={item.name}
-                  sizes="56px"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-ink">{item.name}</p>
-              </div>
-              <div className="text-right text-sm">
-                <p className="font-medium text-ink">
-                  {formatPrice(item.price)}
-                </p>
-                <p className="text-xs text-muted">x{item.quantity}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 border-t-2 border-dashed border-cream pt-6">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted">商品件数</span>
-            <span className="font-medium text-ink">{totalQty} 件</span>
-          </div>
-          <div className="mt-4 flex items-center justify-between border-t border-cream pt-4">
-            <span className="text-base font-bold text-ink">合计</span>
-            <span className="text-2xl font-bold text-accent">
-              {formatPrice(totalAmount)}
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl bg-cream p-4">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-accent">
-            <Sparkles size={14} />
-            <span>AI 毒舌点评</span>
-          </div>
-          {order.aiReview ? (
-            <p className="mt-2 text-sm leading-relaxed text-ink">
-              {order.aiReview}
-            </p>
-          ) : (
-            <div className="mt-2 space-y-2">
-              <div className="skeleton h-4 w-full rounded" />
-              <div className="skeleton h-4 w-4/5 rounded" />
-            </div>
-          )}
-        </div>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm font-medium text-ink">感谢你的购买</p>
+        <div className="flex justify-between">
+          <span className="uppercase text-muted">Day No.</span>
+          <span className="font-medium">{dayNo}</span>
         </div>
       </div>
+
+      <div className="my-6 border-b border-dashed border-ink/20" />
+
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-ink text-left">
+            <th className="w-8 pb-1.5 font-medium uppercase">#</th>
+            <th className="pb-1.5 font-medium uppercase">名称</th>
+            <th className="pb-1.5 text-right font-medium uppercase">Qty</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-dashed divide-ink/10">
+          {items.map((item, idx) => (
+            <tr
+              key={`${item.productId}-${item.spec}`}
+              className="align-top"
+            >
+              <td className="py-3 font-medium">
+                {String(idx + 1).padStart(2, "0")}
+              </td>
+              <td className="py-3">
+                <p className="font-medium">{item.name}</p>
+                <p className="mt-0.5 text-[10px] text-muted">
+                  · {item.spec} {formatPrice(item.price)}
+                </p>
+              </td>
+              <td className="py-3 text-right font-medium">
+                ×{item.quantity}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="my-6 border-b border-dashed border-ink/20" />
+
+      <div className="text-center">
+        <p className="text-[10px] text-muted">优惠码</p>
+        <p className="mt-1 text-sm font-bold">
+          {order.aiReview || "开心每一天"}
+        </p>
+      </div>
+
+      <div className="my-6 border-b border-dashed border-ink/20" />
+
+      <div className="text-center">
+        <p className="text-[10px] text-muted">配送</p>
+        <div className="mt-2 space-y-1 text-left text-xs">
+          <p>
+            <span className="text-muted">配送员：</span>things never come App
+          </p>
+          <p>
+            <span className="text-muted">配送地址：</span>云端仓库 1 号
+          </p>
+        </div>
+      </div>
+
+      <div className="my-6 border-t-2 border-ink" />
+
+      <div className="space-y-1 text-xs">
+        <div className="flex justify-between">
+          <span className="uppercase">Item Groups</span>
+          <span className="font-medium">{items.length}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="uppercase">Total Entries</span>
+          <span className="font-medium">{totalQty}</span>
+        </div>
+        <div className="flex justify-between pt-2 text-sm font-bold">
+          <span className="uppercase">Total</span>
+          <span>{formatPrice(totalAmount)}</span>
+        </div>
+      </div>
+
+      <div className="my-6 border-b border-dashed border-ink/20" />
+
+      <div className="text-center">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted">
+          Today&apos;s Mood
+        </p>
+        <div className="mt-3 text-5xl">{mood.icon}</div>
+        <p className="mt-2 text-sm font-bold">{mood.label}</p>
+      </div>
+
+      <div className="mt-8 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
+        things never come • keep the moment
+      </div>
+
+      <div className="mt-4 px-4">
+        <Barcode value={order.id} />
+        <p className="mt-1 text-center text-[10px] tracking-widest text-muted">
+          {order.id}
+        </p>
+      </div>
+
+      <p className="mt-4 text-center text-[10px] text-muted">
+        打印时间：{formatTime(order.createdAt)}
+      </p>
+
+      <div className="receipt-zigzag-bottom absolute bottom-0 left-0 right-0 h-3" />
     </div>
   );
 }

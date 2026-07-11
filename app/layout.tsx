@@ -5,6 +5,14 @@ import { AppProviders } from "@/lib/cart-context";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import { Space_Mono } from "next/font/google";
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "things never come - 购物版多巴胺",
@@ -22,7 +30,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" className={spaceMono.variable}>
       <head>
         <link rel="preconnect" href="https://api.deepseek.com" />
         <link rel="dns-prefetch" href="https://api.deepseek.com" />

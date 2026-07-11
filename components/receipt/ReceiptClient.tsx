@@ -47,9 +47,9 @@ export default function ReceiptClient() {
   }
 
   return (
-    <div className="mx-auto max-w-site px-6 py-8 md:px-8">
-      <div className="mx-auto max-w-xl">
-        <div className="mb-6 flex items-center justify-between no-print">
+    <div className="mx-auto max-w-site px-4 py-6 md:px-8 md:py-8">
+      <div className="mx-auto max-w-md">
+        <div className="mb-4 flex items-center justify-between no-print md:mb-6">
           <h1 className="text-2xl font-bold text-ink">订单账单</h1>
           <div className="flex items-center gap-2">
             <button
