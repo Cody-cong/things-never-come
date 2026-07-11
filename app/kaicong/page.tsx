@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
             <Link
               key={href}
               href={href}
-              className="pastel-card flex items-center gap-4 p-5 transition hover:shadow-soft active:scale-[0.98]"
+              className="pastel-card flex items-center gap-4 p-5 transition hover:shadow-soft press-spring"
             >
               <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${color}`}

@@ -6,8 +6,10 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/cart-context";
+import { useToast } from "@/lib/toast-context";
 import { formatPrice } from "@/lib/utils";
 import ProductImage from "./ProductImage";
+import RippleButton from "./RippleButton";
 
 const LimitAlertModal = dynamic(() => import("./LimitAlertModal"), {
   ssr: false,
@@ -20,6 +22,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const { items, addItem } = useCart();
+  const { showToast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
@@ -32,7 +35,39 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     setQuantity((q) => Math.max(1, q + delta));
   }
 
-  function handleAdd(e: React.MouseEvent) {
+  function flyToCart(sourceEl: HTMLElement) {
+    const target = document.getElementById("cart-target");
+    if (!target) return;
+
+    const src = sourceEl.getBoundingClientRect();
+    const dst = target.getBoundingClientRect();
+
+    const el = document.createElement("div");
+    el.className =
+      "fixed z-[100] flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-float pointer-events-none";
+    el.textContent = `+${quantity}`;
+    el.style.left = `${src.left + src.width / 2 - 12}px`;
+    el.style.top = `${src.top + src.height / 2 - 12}px`;
+    document.body.appendChild(el);
+
+    const dx = dst.left + dst.width / 2 - (src.left + src.width / 2);
+    const dy = dst.top + dst.height / 2 - (src.top + src.height / 2);
+
+    el.animate(
+      [
+        { transform: "translate(0, 0) scale(1)", opacity: 1 },
+        {
+          transform: `translate(${dx * 0.55}px, ${dy * 0.55}px) scale(1.15)`,
+          opacity: 1,
+          offset: 0.5,
+        },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.45)`, opacity: 0.4 },
+      ],
+      { duration: 680, easing: "cubic-bezier(0.2, 0.75, 0.25, 1)" }
+    ).onfinish = () => el.remove();
+  }
+
+  function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     e.stopPropagation();
     const max = product.maxQuantity;
@@ -58,10 +93,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       quantity,
     });
     setQuantity(1);
+    showToast("已加入购物车，正在准备不发货", <ShoppingCart size={14} />);
+    flyToCart(e.currentTarget);
   }
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition hover:shadow-soft">
+    <div className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition-all hover:-translate-y-1 hover:shadow-soft">
       <Link href={`/product/?id=${product.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-cream">
           <ProductImage
@@ -85,17 +122,18 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         <div className="mt-1 flex items-center gap-2">
           <div className="flex items-center rounded-full border border-cream bg-cream/50">
-            <button
+            <RippleButton
               type="button"
               onClick={(e) => {
                 e.preventDefault();
                 adjust(-1);
               }}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink"
+              rippleColor="rgba(217, 83, 79, 0.18)"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink press-spring"
               aria-label="减少数量"
             >
               <Minus size={14} />
-            </button>
+            </RippleButton>
             <input
               type="number"
               inputMode="numeric"
@@ -108,27 +146,28 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               className="w-7 bg-transparent text-center text-sm font-medium text-ink outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               aria-label="购买数量"
             />
-            <button
+            <RippleButton
               type="button"
               onClick={(e) => {
                 e.preventDefault();
                 adjust(1);
               }}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink"
+              rippleColor="rgba(217, 83, 79, 0.18)"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink press-spring"
               aria-label="增加数量"
             >
               <Plus size={14} />
-            </button>
+            </RippleButton>
           </div>
-          <button
+          <RippleButton
             type="button"
             onClick={handleAdd}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2 text-sm font-medium text-white transition hover:bg-accent-dark active:scale-95"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent py-2 text-sm font-medium text-white transition hover:bg-accent-dark press-spring"
             aria-label="加入购物车"
           >
             <ShoppingCart size={14} />
             <span className="hidden sm:inline">加入购物车</span>
-          </button>
+          </RippleButton>
         </div>
       </div>
 

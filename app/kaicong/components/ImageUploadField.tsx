@@ -59,7 +59,7 @@ export default function ImageUploadField({
             <button
               type="button"
               onClick={() => onChange("")}
-              className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-accent-dark shadow-card backdrop-blur active:scale-95"
+              className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-accent-dark shadow-card backdrop-blur press-spring"
             >
               <X size={12} /> 移除
             </button>
@@ -77,7 +77,7 @@ export default function ImageUploadField({
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className="mt-3 flex items-center justify-center gap-1.5 rounded-2xl border border-accent bg-blush py-2.5 text-sm font-medium text-accent-dark active:scale-[0.98] disabled:opacity-60"
+        className="mt-3 flex items-center justify-center gap-1.5 rounded-2xl border border-accent bg-blush py-2.5 text-sm font-medium text-accent-dark press-spring disabled:opacity-60"
       >
         <Upload size={14} />
         {uploading ? "处理中..." : hasImage ? "重新上传" : "点击上传图片"}

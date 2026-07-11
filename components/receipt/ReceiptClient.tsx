@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Package, Printer, Home } from "lucide-react";
+import { Package, Download, Home } from "lucide-react";
 import { useOrders } from "@/lib/cart-context";
+import { saveReceiptAsImage } from "@/lib/save-receipt-image";
 import ReceiptContent from "./ReceiptContent";
 
 export default function ReceiptClient() {
@@ -11,6 +12,8 @@ export default function ReceiptClient() {
   const { orders } = useOrders();
   const [orderId, setOrderId] = useState("");
   const [mounted, setMounted] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setOrderId(new URLSearchParams(window.location.search).get("orderId") ?? "");
@@ -42,22 +45,34 @@ export default function ReceiptClient() {
     );
   }
 
-  function handlePrint() {
-    window.print();
+  async function handleSaveImage() {
+    if (!receiptRef.current || saving) return;
+    setSaving(true);
+    try {
+      await saveReceiptAsImage(
+        receiptRef.current,
+        `账单-${order?.id ?? "unknown"}.png`,
+      );
+    } catch (e) {
+      console.error("[receipt] save image failed", e);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <div className="mx-auto max-w-site px-4 py-6 md:px-8 md:py-8">
+    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-site items-start justify-center px-4 py-6 pb-20 md:px-8 md:py-8 md:pb-8">
       <div className="mx-auto max-w-md">
         <div className="mb-4 flex items-center justify-between no-print md:mb-6">
           <h1 className="text-2xl font-bold text-ink">订单账单</h1>
           <div className="flex items-center gap-2">
             <button
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-dark"
+              onClick={handleSaveImage}
+              disabled={saving}
+              className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Printer size={16} />
-              保存账单
+              <Download size={16} />
+              {saving ? "保存中…" : "保存图片"}
             </button>
             <button
               onClick={() => router.push("/")}
@@ -69,10 +84,12 @@ export default function ReceiptClient() {
           </div>
         </div>
 
-        <ReceiptContent order={order} />
+        <div ref={receiptRef}>
+          <ReceiptContent order={order} />
+        </div>
 
         <p className="mt-4 text-center text-xs text-muted no-print">
-          点击「保存账单」即可通过浏览器打印或导出为 PDF。
+          点击「保存图片」即可将账单保存到相册。
         </p>
       </div>
     </div>

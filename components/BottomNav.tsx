@@ -26,7 +26,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-blush/50 bg-white/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(93,64,55,0.04)]">
+    <nav className="sticky bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-blush/50 bg-white/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(93,64,55,0.04)] md:hidden">
       {NAVS.map(({ href, icon: Icon, label }) => {
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (

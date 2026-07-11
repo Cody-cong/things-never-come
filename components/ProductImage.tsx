@@ -24,6 +24,7 @@ export default function ProductImage({
   sizes = "(max-width: 768px) 50vw, 25vw",
 }: ProductImageProps) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   if (failed) {
     return (
@@ -46,11 +47,12 @@ export default function ProductImage({
         alt={alt}
         fill
         sizes={sizes}
-        className={className}
+        className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         loading={lazy && !priority ? "lazy" : "eager"}
         priority={priority || !lazy}
         decoding="async"
         onError={() => setFailed(true)}
+        onLoadingComplete={() => setLoaded(true)}
       />
     </div>
   );

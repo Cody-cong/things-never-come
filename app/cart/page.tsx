@@ -12,6 +12,7 @@ import {
 } from "@/lib/achievement-store";
 import dynamic from "next/dynamic";
 import ProductImage from "@/components/ProductImage";
+import RippleButton from "@/components/RippleButton";
 import { useState, useRef, useEffect } from "react";
 import { generateOrderReview } from "@/lib/ai-review";
 import type { Order } from "@/lib/types";
@@ -114,7 +115,7 @@ export default function CartPage() {
         <p className="mt-1 text-sm text-muted">假装购物也要先加点东西</p>
         <Link
           href="/"
-          className="mt-6 rounded-full bg-accent px-8 py-3 text-sm font-bold text-white transition hover:bg-accent-dark"
+          className="mt-6 inline-block rounded-full bg-accent px-8 py-3 text-sm font-bold text-white transition hover:bg-accent-dark press-spring"
         >
           去逛逛好物
         </Link>
@@ -154,13 +155,14 @@ export default function CartPage() {
                   >
                     {item.name}
                   </Link>
-                  <button
+                  <RippleButton
                     onClick={() => removeItem(item.productId, item.spec)}
                     aria-label="删除"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream text-muted transition hover:bg-accent-light hover:text-accent"
+                    rippleColor="rgba(217, 83, 79, 0.15)"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream text-muted transition hover:bg-accent-light hover:text-accent press-spring"
                   >
                     <Trash2 size={14} />
-                  </button>
+                  </RippleButton>
                 </div>
                 <span className="mt-1 inline-block w-fit rounded-full bg-cream px-3 py-1 text-xs font-medium text-ink/70">
                   {item.spec}
@@ -171,20 +173,21 @@ export default function CartPage() {
                   </span>
                   <div className="flex items-center gap-2">
                     <div className="inline-flex items-center gap-1 rounded-full bg-cream px-1 py-0.5">
-                      <button
+                      <RippleButton
                         onClick={() =>
                           updateQty(item.productId, item.spec, item.quantity - 1)
                         }
                         disabled={item.quantity <= 1}
                         aria-label="减少数量"
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90 disabled:opacity-30"
+                        rippleColor="rgba(217, 83, 79, 0.18)"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream press-spring disabled:opacity-30"
                       >
                         <Minus size={14} />
-                      </button>
+                      </RippleButton>
                       <span className="min-w-[26px] text-center text-sm font-bold text-ink">
                         {item.quantity}
                       </span>
-                      <button
+                      <RippleButton
                         onClick={async () => {
                           const product = await getProductById(item.productId);
                           const max = product?.maxQuantity;
@@ -205,10 +208,11 @@ export default function CartPage() {
                           updateQty(item.productId, item.spec, item.quantity + 1);
                         }}
                         aria-label="增加数量"
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90"
+                        rippleColor="rgba(217, 83, 79, 0.18)"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream press-spring"
                       >
                         <Plus size={14} />
-                      </button>
+                      </RippleButton>
                     </div>
                   </div>
                 </div>
@@ -226,10 +230,10 @@ export default function CartPage() {
             不会扣除真实资金，纯模拟结算。
           </p>
 
-          <button
+          <RippleButton
             onClick={handleCheckout}
             disabled={submitting || items.length === 0}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-bold text-white transition hover:bg-accent-dark press-spring disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? (
               "结算中…"
@@ -239,7 +243,7 @@ export default function CartPage() {
                 <Sparkles size={16} />
               </>
             )}
-          </button>
+          </RippleButton>
         </div>
       </div>
 

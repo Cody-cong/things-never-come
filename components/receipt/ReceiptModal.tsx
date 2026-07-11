@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, X, FileText } from "lucide-react";
 import ReceiptContent from "./ReceiptContent";
+import { saveReceiptAsImage } from "@/lib/save-receipt-image";
 import type { Order } from "@/lib/types";
 
 interface ReceiptModalProps {
@@ -25,17 +26,9 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
     if (!receiptRef.current || saving) return;
     setSaving(true);
     try {
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(receiptRef.current, {
-        pixelRatio: 2,
-        quality: 0.95,
-      });
-      const link = document.createElement("a");
-      link.download = `账单-${order.id}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch {
-      window.print();
+      await saveReceiptAsImage(receiptRef.current, `账单-${order.id}.png`);
+    } catch (e) {
+      console.error("[receipt] save image failed", e);
     } finally {
       setSaving(false);
     }
@@ -43,14 +36,14 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
 
   return (
     <div
-      className="receipt-modal-overlay fixed inset-0 z-[70] flex min-h-dvh items-end justify-center bg-ink/50 p-4 backdrop-blur-sm sm:items-center"
+      className="receipt-modal-overlay fixed inset-0 z-[70] flex max-h-dvh min-h-dvh items-end justify-center overflow-hidden bg-ink/50 p-4 backdrop-blur-sm sm:items-center"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="receipt-title"
     >
       <div
-        className="receipt-modal-panel flex w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-cream p-4 shadow-float sm:p-6"
+        className="receipt-modal-panel flex w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-cream p-4 shadow-float sm:max-h-[calc(100dvh-3rem)] sm:p-6 max-h-[calc(100dvh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="receipt-modal-header mb-4 flex shrink-0 items-center justify-between no-print">
@@ -74,7 +67,7 @@ export default function ReceiptModal({ order, onClose }: ReceiptModalProps) {
           </button>
         </div>
 
-        <div ref={receiptRef} className="min-h-0 overflow-y-auto">
+        <div ref={receiptRef} className="min-h-0 flex-1 overflow-y-auto">
           <ReceiptContent order={order} />
         </div>
 

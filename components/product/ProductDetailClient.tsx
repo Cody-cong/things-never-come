@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShoppingCart, Plus, Minus, Check, ChevronLeft } from "lucide-react";
@@ -9,11 +9,44 @@ import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import ProductImage from "@/components/ProductImage";
+import RippleButton from "@/components/RippleButton";
 import type { Product } from "@/lib/types";
 
 const LimitAlertModal = dynamic(() => import("@/components/LimitAlertModal"), {
   ssr: false,
 });
+
+function flyToCart(sourceEl: HTMLElement | null, quantity: number) {
+  const target = document.getElementById("cart-target");
+  if (!target || !sourceEl) return;
+
+  const src = sourceEl.getBoundingClientRect();
+  const dst = target.getBoundingClientRect();
+
+  const el = document.createElement("div");
+  el.className =
+    "fixed z-[100] flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-float pointer-events-none";
+  el.textContent = `+${quantity}`;
+  el.style.left = `${src.left + src.width / 2 - 12}px`;
+  el.style.top = `${src.top + src.height / 2 - 12}px`;
+  document.body.appendChild(el);
+
+  const dx = dst.left + dst.width / 2 - (src.left + src.width / 2);
+  const dy = dst.top + dst.height / 2 - (src.top + src.height / 2);
+
+  el.animate(
+    [
+      { transform: "translate(0, 0) scale(1)", opacity: 1 },
+      {
+        transform: `translate(${dx * 0.55}px, ${dy * 0.55}px) scale(1.15)`,
+        opacity: 1,
+        offset: 0.5,
+      },
+      { transform: `translate(${dx}px, ${dy}px) scale(0.45)`, opacity: 0.4 },
+    ],
+    { duration: 680, easing: "cubic-bezier(0.2, 0.75, 0.25, 1)" }
+  ).onfinish = () => el.remove();
+}
 
 export default function ProductDetailClient() {
   const router = useRouter();
@@ -28,6 +61,7 @@ export default function ProductDetailClient() {
     show: false,
     message: "",
   });
+  const addBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const productId = new URLSearchParams(window.location.search).get("id") ?? "";
@@ -68,6 +102,7 @@ export default function ProductDetailClient() {
     });
     setAdded(true);
     setQuantity(1);
+    flyToCart(addBtnRef.current, quantity);
     setTimeout(() => setAdded(false), 1500);
   };
 
@@ -106,7 +141,7 @@ export default function ProductDetailClient() {
     <div className="mx-auto max-w-site px-6 py-8 md:px-8">
       <button
         onClick={() => router.back()}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card transition hover:shadow-soft"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card transition hover:shadow-soft press-spring"
         aria-label="返回"
       >
         <ChevronLeft size={20} className="text-ink" />
@@ -151,7 +186,7 @@ export default function ProductDetailClient() {
                   onClick={() => setSpec(s)}
                   role="radio"
                   aria-checked={spec === s}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition press-spring ${
                     spec === s
                       ? "bg-accent text-white"
                       : "bg-white text-ink shadow-card hover:bg-cream"
@@ -170,14 +205,15 @@ export default function ProductDetailClient() {
               role="group"
               aria-label="购买数量"
             >
-              <button
+              <RippleButton
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
                 aria-label="减少数量"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90 disabled:opacity-30"
+                rippleColor="rgba(217, 83, 79, 0.18)"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream press-spring disabled:opacity-30"
               >
                 <Minus size={16} />
-              </button>
+              </RippleButton>
               <input
                 type="text"
                 inputMode="numeric"
@@ -189,13 +225,14 @@ export default function ProductDetailClient() {
                 className="w-8 bg-transparent text-center text-sm font-bold text-ink outline-none"
                 aria-label="购买数量"
               />
-              <button
+              <RippleButton
                 onClick={() => setQuantity((q) => q + 1)}
                 aria-label="增加数量"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream active:scale-90"
+                rippleColor="rgba(217, 83, 79, 0.18)"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:bg-cream press-spring"
               >
                 <Plus size={16} />
-              </button>
+              </RippleButton>
             </div>
           </div>
 
@@ -211,10 +248,11 @@ export default function ProductDetailClient() {
             >
               <ShoppingCart size={20} className="text-ink" />
             </Link>
-            <button
+            <RippleButton
+              ref={addBtnRef}
               onClick={handleAdd}
               disabled={added}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-bold text-white transition ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-bold text-white transition press-spring ${
                 added
                   ? "bg-accent-dark cursor-not-allowed"
                   : "bg-accent hover:bg-accent-dark"
@@ -231,7 +269,7 @@ export default function ProductDetailClient() {
                   加入购物车
                 </>
               )}
-            </button>
+            </RippleButton>
           </div>
         </div>
       </div>

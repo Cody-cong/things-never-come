@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { AppProviders } from "@/lib/cart-context";
+import { ToastProvider } from "@/lib/toast-context";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
@@ -43,12 +44,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <AppProviders>
-          <div className="flex min-h-screen flex-col bg-cream">
-            <Header />
-            <main className="flex-1 pt-16">{children}</main>
-            <Footer />
-            <BottomNav />
-          </div>
+          <ToastProvider>
+            <div className="flex min-h-screen flex-col bg-cream">
+              <Header />
+              <main className="flex-1 pt-16">{children}</main>
+              <Footer />
+              <BottomNav />
+            </div>
+          </ToastProvider>
         </AppProviders>
       </body>
     </html>

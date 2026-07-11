@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
+import TakeoutBoxIcon from "@/components/TakeoutBoxIcon";
 
 const NAVS = [
   { href: "/", label: "首页" },
@@ -19,6 +20,7 @@ export default function Header() {
   const pathname = usePathname();
   const { totalCount } = useCart();
   const [hidden, setHidden] = useState(false);
+  const [cartBump, setCartBump] = useState(false);
   const rafRef = useRef<number | null>(null);
   const pendingY = useRef(0);
   const lastScrollYRef = useRef(0);
@@ -57,6 +59,13 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    if (totalCount === 0) return;
+    setCartBump(true);
+    const t = setTimeout(() => setCartBump(false), 350);
+    return () => clearTimeout(t);
+  }, [totalCount]);
+
   return (
     <header
       className={`fixed left-0 right-0 top-0 z-50 w-full border-b border-ink/5 bg-cream/80 backdrop-blur-sm transition-transform duration-300 ${
@@ -65,7 +74,15 @@ export default function Header() {
     >
       <div className="mx-auto flex max-w-site items-center justify-between px-6 py-4 md:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl font-bold text-ink">things never come</span>
+          <TakeoutBoxIcon size={36} />
+          <div className="flex flex-col leading-none">
+            <span className="text-xl font-black tracking-tight text-accent">
+              things never come
+            </span>
+            <span className="text-[10px] font-semibold tracking-wide text-muted">
+              Order Things. Get Nothing.
+            </span>
+          </div>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -88,13 +105,19 @@ export default function Header() {
 
         <div className="flex items-center gap-3">
           <Link
+            id="cart-target"
             href="/cart"
             className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card transition hover:shadow-soft"
             aria-label="购物车"
           >
-            <ShoppingCart size={18} className="text-ink" />
+            <span className={cartBump ? "icon-bounce inline-flex" : "inline-flex"}>
+              <ShoppingCart size={18} className="text-ink" />
+            </span>
             {totalCount > 0 && (
-              <span className="badge-pop absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white">
+              <span
+                key={totalCount}
+                className="badge-pop absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white"
+              >
                 {totalCount > 99 ? "99+" : totalCount}
               </span>
             )}

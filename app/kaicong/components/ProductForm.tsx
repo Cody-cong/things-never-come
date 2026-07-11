@@ -283,7 +283,7 @@ export default function ProductForm({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex-[2] rounded-full bg-accent py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-[2] rounded-full bg-accent py-2.5 text-sm font-medium text-white transition press-spring disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "保存中…" : "保存"}
         </button>
