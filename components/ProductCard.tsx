@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { useCart } from "@/lib/cart-context";
+import { useCartState, useCartActions } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { checkPurchaseLimit, flyToCart } from "@/lib/cart-utils";
 import ProductImage from "./ProductImage";
 import RippleButton from "./RippleButton";
 
@@ -19,8 +20,9 @@ interface ProductCardProps {
   priority?: boolean;
 }
 
-export default function ProductCard({ product, priority = false }: ProductCardProps) {
-  const { items, addItem } = useCart();
+function ProductCard({ product, priority = false }: ProductCardProps) {
+  const { items } = useCartState();
+  const { addItem } = useCartActions();
   const [quantity, setQuantity] = useState(1);
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
@@ -33,53 +35,13 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     setQuantity((q) => Math.max(1, q + delta));
   }
 
-  function flyToCart(sourceEl: HTMLElement) {
-    const target = document.getElementById("cart-target");
-    if (!target) return;
-
-    const src = sourceEl.getBoundingClientRect();
-    const dst = target.getBoundingClientRect();
-
-    const el = document.createElement("div");
-    el.className =
-      "fixed z-[100] flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-float pointer-events-none";
-    el.textContent = `+${quantity}`;
-    el.style.left = `${src.left + src.width / 2 - 12}px`;
-    el.style.top = `${src.top + src.height / 2 - 12}px`;
-    document.body.appendChild(el);
-
-    const dx = dst.left + dst.width / 2 - (src.left + src.width / 2);
-    const dy = dst.top + dst.height / 2 - (src.top + src.height / 2);
-
-    el.animate(
-      [
-        { transform: "translate(0, 0) scale(1)", opacity: 1 },
-        {
-          transform: `translate(${dx * 0.55}px, ${dy * 0.55}px) scale(1.15)`,
-          opacity: 1,
-          offset: 0.5,
-        },
-        { transform: `translate(${dx}px, ${dy}px) scale(0.45)`, opacity: 0.4 },
-      ],
-      { duration: 680, easing: "cubic-bezier(0.2, 0.75, 0.25, 1)" }
-    ).onfinish = () => el.remove();
-  }
-
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     e.stopPropagation();
-    const max = product.maxQuantity;
-    if (max && max > 0) {
-      const currentQty = items
-        .filter((i) => i.productId === product.id)
-        .reduce((sum, i) => sum + i.quantity, 0);
-      if (currentQty + quantity > max) {
-        setLimitAlert({
-          show: true,
-          message: product.limitMessage?.trim() || `该商品每人限购 ${max} 件`,
-        });
-        return;
-      }
+    const check = checkPurchaseLimit(product, quantity, items);
+    if (!check.allowed) {
+      setLimitAlert({ show: true, message: check.message || "" });
+      return;
     }
     addItem({
       productId: product.id,
@@ -91,7 +53,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       quantity,
     });
     setQuantity(1);
-    flyToCart(e.currentTarget);
+    flyToCart(e.currentTarget, quantity);
   }
 
   return (
@@ -177,3 +139,5 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     </div>
   );
 }
+
+export default memo(ProductCard);

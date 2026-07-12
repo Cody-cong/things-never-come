@@ -1,4 +1,5 @@
 import type { Order } from "./types";
+import { formatPrice } from "./utils";
 
 const API_KEY = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY ?? "";
 const API_URL = "https://api.deepseek.com/chat/completions";
@@ -29,10 +30,6 @@ function buildPrompt(order: Order): string {
 订单总金额：${formatPrice(order.totalAmount)}
 商品清单：
 ${items}`;
-}
-
-function formatPrice(amount: number): string {
-  return `$${amount.toFixed(2)}`;
 }
 
 export async function generateOrderReview(order: Order): Promise<string> {

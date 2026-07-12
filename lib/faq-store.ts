@@ -14,8 +14,13 @@ export interface HomeFaq {
  * - 读取时以云端为准，但不会清空本地默认值（首次使用）。
  * - 如果云端为空且本地有默认值，会把默认值上传到云端作为初始数据。
  * - 管理端编辑后，所有客户端都会拉取到最新云端数据。
+ *
+ * 性能优化：
+ * - 同一次页面生命周期内对 `readAll` 结果做内存缓存，避免重复请求。
  */
 const KEY = "gnc_home_faqs_v1";
+
+let cache: HomeFaq[] | null = null;
 
 const DEFAULT_FAQS: HomeFaq[] = [
   {
@@ -87,6 +92,8 @@ async function clearRemote(): Promise<void> {
 }
 
 async function readAll(): Promise<HomeFaq[]> {
+  if (cache) return cache;
+
   const local = parseLocalFaqs();
   if (!isSupabaseEnabled()) return local;
 
@@ -96,11 +103,13 @@ async function readAll(): Promise<HomeFaq[]> {
     // 云端为空且本地有默认值时，把默认值作为初始数据上传到云端。
     if (remote.length === 0 && local.length > 0) {
       await Promise.all(local.map((f, i) => writeRemoteRow(f, i)));
+      cache = local;
       return local;
     }
 
     // 否则以云端为准，并把最新数据缓存到本地。
     writeLocal(KEY, remote);
+    cache = remote;
     return remote;
   } catch (e) {
     console.warn("[faq-store] 读取 Supabase 失败，回退到 localStorage", e);
@@ -123,6 +132,7 @@ export async function addFaq(q: string, a: string): Promise<HomeFaq> {
   const list = await readAll();
   list.push(faq);
   writeLocal(KEY, list);
+  cache = list;
   try {
     await writeRemoteRow(faq, list.length - 1);
   } catch (e) {
@@ -145,6 +155,7 @@ export async function updateFaq(
     ...(patch.a !== undefined ? { a: patch.a.trim() } : {}),
   };
   writeLocal(KEY, list);
+  cache = list;
   try {
     await writeRemoteRow(list[idx], idx);
   } catch (e) {
@@ -156,6 +167,7 @@ export async function updateFaq(
 export async function deleteFaq(id: string): Promise<void> {
   const list = (await readAll()).filter((f) => f.id !== id);
   writeLocal(KEY, list);
+  cache = list;
   try {
     await removeRemote(id);
     await Promise.all(list.map((f, i) => writeRemoteRow(f, i)));
@@ -167,6 +179,7 @@ export async function deleteFaq(id: string): Promise<void> {
 /** 重置 FAQ 为默认 4 条 */
 export async function resetFaqs(): Promise<void> {
   writeLocal(KEY, DEFAULT_FAQS);
+  cache = DEFAULT_FAQS;
   try {
     await clearRemote();
     await Promise.all(DEFAULT_FAQS.map((f, i) => writeRemoteRow(f, i)));

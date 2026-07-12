@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Home, ShoppingCart, User, LucideIcon } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
+import { useCartState } from "@/lib/cart-context";
 
 interface NavItem {
   href: string;
@@ -19,7 +20,15 @@ const NAVS: NavItem[] = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { totalCount } = useCart();
+  const { totalCount } = useCartState();
+  const [cartBump, setCartBump] = useState(false);
+
+  useEffect(() => {
+    if (totalCount === 0) return;
+    setCartBump(true);
+    const t = setTimeout(() => setCartBump(false), 300);
+    return () => clearTimeout(t);
+  }, [totalCount]);
 
   if (pathname.startsWith("/product")) {
     return null;
@@ -52,8 +61,9 @@ export default function BottomNav() {
               </div>
               {href === "/cart" && totalCount > 0 && (
                 <span
-                  key={totalCount}
-                  className="badge-pop absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white shadow-card"
+                  className={`absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white shadow-card ${
+                    cartBump ? "animate-bump" : ""
+                  }`}
                 >
                   {totalCount > 99 ? "99+" : totalCount}
                 </span>

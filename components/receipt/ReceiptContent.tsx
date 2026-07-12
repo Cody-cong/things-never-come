@@ -54,7 +54,7 @@ export default function ReceiptContent({ order }: ReceiptContentProps) {
         </div>
         <div className="flex justify-between">
           <span className="uppercase text-muted">Receipt</span>
-          <span className="font-medium">#KFCVWO505050</span>
+          <span className="font-medium">#{order.id.toUpperCase()}</span>
         </div>
       </div>
 

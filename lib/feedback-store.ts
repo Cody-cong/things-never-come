@@ -14,8 +14,13 @@ export interface Feedback {
  * - 读取时合并本地与云端，本地数据不会被云端覆盖。
  * - 本地有而云端没有的反馈会自动补回云端（修复历史数据）。
  * - 新增/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
+ *
+ * 性能优化：
+ * - 同一次页面生命周期内对 `readAll` 结果做内存缓存，避免重复请求。
  */
 const KEY = "gnc_feedback_v1";
+
+let cache: Feedback[] | null = null;
 
 function parseLocalFeedbacks(): Feedback[] {
   const value = readLocal<unknown>(KEY, []);
@@ -56,6 +61,8 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Feedback[]> {
+  if (cache) return cache;
+
   const local = parseLocalFeedbacks();
   if (!isSupabaseEnabled()) return local;
 
@@ -89,6 +96,7 @@ async function readAll(): Promise<Feedback[]> {
       );
     }
 
+    cache = unique;
     return unique;
   } catch (e) {
     console.warn("[feedback-store] 读取 Supabase 失败，回退到 localStorage", e);
@@ -110,6 +118,7 @@ export async function addFeedback(content: string): Promise<Feedback> {
   };
   const list = [item, ...parseLocalFeedbacks()];
   writeLocal(KEY, list);
+  cache = list;
   try {
     await writeRemoteRow(item);
   } catch (e) {
@@ -123,6 +132,7 @@ export async function deleteFeedback(id: string): Promise<void> {
   const all = await readAll();
   const list = all.filter((f) => f.id !== id);
   writeLocal(KEY, list);
+  cache = list;
   try {
     await removeRemote(id);
   } catch (e) {

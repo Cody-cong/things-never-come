@@ -24,11 +24,6 @@ const config: Config = {
         },
         ink: "#2D1F1F",
         muted: "#6B5E5E",
-        brand: {
-          DEFAULT: "#D9534F",
-          dark: "#B43E3A",
-          light: "#FADBD8",
-        },
       },
       boxShadow: {
         card: "0 1px 3px rgba(45, 31, 31, 0.05), 0 1px 2px rgba(45, 31, 31, 0.04)",
@@ -59,6 +54,16 @@ const config: Config = {
       },
       padding: {
         safe: "env(safe-area-inset-bottom)",
+      },
+      animation: {
+        bump: "bump 0.3s ease-out",
+      },
+      keyframes: {
+        bump: {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.25)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
     },
   },

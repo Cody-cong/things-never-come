@@ -3,9 +3,14 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingCart, Sparkles } from "lucide-react";
-import { useCart, useOrders } from "@/lib/cart-context";
+import {
+  useCartState,
+  useCartActions,
+  useOrdersActions,
+} from "@/lib/cart-context";
 import { getProductById } from "@/lib/product-store";
 import { formatPrice } from "@/lib/utils";
+import { checkPurchaseLimit } from "@/lib/cart-utils";
 import {
   checkAchievements,
   type Achievement,
@@ -35,8 +40,9 @@ const AchievementModal = dynamic(
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, totalAmount, updateQty, removeItem, clearCart } = useCart();
-  const { addOrder, updateOrder } = useOrders();
+  const { items, totalAmount } = useCartState();
+  const { updateQty, removeItem, clearCart } = useCartActions();
+  const { addOrder, updateOrder } = useOrdersActions();
   const [limitAlert, setLimitAlert] = useState<{ show: boolean; message: string }>({
     show: false,
     message: "",
@@ -58,7 +64,6 @@ export default function CartPage() {
         createdAt: Date.now(),
         status: "pending",
       };
-      console.log("[checkout] 订单总额:", order.totalAmount, "商品数:", order.items.length);
       addOrder(order);
       clearCart();
       lastOrderRef.current = order;
@@ -85,7 +90,6 @@ export default function CartPage() {
     setLastOrder(null);
     if (order) {
       const unlocked = await checkAchievements(order);
-      console.log("[achievement] 总额:", order.totalAmount, "解锁:", unlocked.length, unlocked.map((a) => a.id));
       if (unlocked.length > 0) {
         setAchievementQueue(unlocked);
         return;
@@ -197,20 +201,17 @@ export default function CartPage() {
                       <RippleButton
                         onClick={async () => {
                           const product = await getProductById(item.productId);
-                          const max = product?.maxQuantity;
-                          if (max && max > 0) {
-                            const currentQty = items
-                              .filter((i) => i.productId === item.productId)
-                              .reduce((sum, i) => sum + i.quantity, 0);
-                            if (currentQty + 1 > max) {
-                              setLimitAlert({
-                                show: true,
-                                message:
-                                  product?.limitMessage?.trim() ||
-                                  `该商品每人限购 ${max} 件`,
-                              });
-                              return;
-                            }
+                          if (!product) {
+                            updateQty(item.productId, item.spec, item.quantity + 1);
+                            return;
+                          }
+                          const check = checkPurchaseLimit(product, 1, items);
+                          if (!check.allowed) {
+                            setLimitAlert({
+                              show: true,
+                              message: check.message || "",
+                            });
+                            return;
                           }
                           updateQty(item.productId, item.spec, item.quantity + 1);
                         }}

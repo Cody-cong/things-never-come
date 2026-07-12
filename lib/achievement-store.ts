@@ -15,10 +15,15 @@ export type { Achievement };
  * 成就本身的判定逻辑是代码内建的（ ACHIEVEMENTS ），管理端只能控制
  * 哪些成就是"启用"的；被禁用的成就不会再在购物车结算或成就展示中出现。
  * 状态优先同步到 Supabase，未配置或离线时回退到 localStorage。
+ *
+ * 性能优化：
+ * - 同一次页面生命周期内对启用状态做内存缓存，避免重复请求。
  */
 const KEY = "gnc_achievements_enabled_v2";
 
 const DEFAULT_ENABLED_IDS = new Set(ACHIEVEMENTS.map((a) => a.id));
+
+let cache: Set<string> | null = null;
 
 function parseLocalEnabled(): Set<string> {
   const value = readLocal<unknown>(KEY, Array.from(DEFAULT_ENABLED_IDS));
@@ -61,6 +66,8 @@ async function clearRemote(): Promise<void> {
 }
 
 async function readEnabledIds(): Promise<Set<string>> {
+  if (cache) return cache;
+
   const local = parseLocalEnabled();
   if (!isSupabaseEnabled()) return local;
 
@@ -72,10 +79,12 @@ async function readEnabledIds(): Promise<Set<string>> {
       await Promise.all(
         ACHIEVEMENTS.map((a) => writeRemoteRow(a.id, true))
       );
+      cache = new Set(DEFAULT_ENABLED_IDS);
       return new Set(DEFAULT_ENABLED_IDS);
     }
 
     writeLocal(KEY, Array.from(remote));
+    cache = remote;
     return remote;
   } catch (e) {
     console.warn("[achievement-store] 读取 Supabase 失败，回退到 localStorage", e);
@@ -120,6 +129,7 @@ export async function getEnabledAchievementIds(): Promise<Set<string>> {
 export async function setEnabledAchievementIds(ids: Set<string>): Promise<void> {
   const valid = new Set(Array.from(ids).filter((id) => DEFAULT_ENABLED_IDS.has(id)));
   writeLocal(KEY, Array.from(valid));
+  cache = valid;
   try {
     await Promise.all(
       ACHIEVEMENTS.map((a) => writeRemoteRow(a.id, valid.has(a.id)))
@@ -148,6 +158,7 @@ export async function enableAchievement(id: string): Promise<void> {
 /** 重置为默认全部启用 */
 export async function resetAchievements(): Promise<void> {
   writeLocal(KEY, Array.from(DEFAULT_ENABLED_IDS));
+  cache = new Set(DEFAULT_ENABLED_IDS);
   try {
     await clearRemote();
     await Promise.all(

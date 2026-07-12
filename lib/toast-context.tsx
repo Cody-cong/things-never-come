@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useMemo,
   ReactNode,
 } from "react";
 
@@ -31,8 +32,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }, 2200);
   }, []);
 
+  const value = useMemo(() => ({ showToast }), [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       <div className="fixed bottom-24 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2 px-4 md:bottom-8">
         {toasts.map((toast) => (

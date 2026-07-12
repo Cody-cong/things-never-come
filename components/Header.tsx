@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useCart } from "@/lib/cart-context";
+import { useCartState } from "@/lib/cart-context";
 import Logo from "@/components/Logo";
 
 const NAVS = [
@@ -18,7 +18,7 @@ const NAVS = [
 
 export default function Header() {
   const pathname = usePathname();
-  const { totalCount } = useCart();
+  const { totalCount } = useCartState();
   const [hidden, setHidden] = useState(false);
   const [cartBump, setCartBump] = useState(false);
   const rafRef = useRef<number | null>(null);
@@ -105,8 +105,9 @@ export default function Header() {
             </span>
             {totalCount > 0 && (
               <span
-                key={totalCount}
-                className="badge-pop absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white"
+                className={`absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white ${
+                  cartBump ? "animate-bump" : ""
+                }`}
               >
                 {totalCount > 99 ? "99+" : totalCount}
               </span>

@@ -15,6 +15,8 @@ export default function SearchPage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q") ?? "";
+    setKeyword(q);
     async function load() {
       const all = await getAllProducts();
       setProducts(all);

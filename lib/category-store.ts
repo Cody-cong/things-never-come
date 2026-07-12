@@ -9,8 +9,13 @@ import { readLocal, writeLocal, isValidArray } from "./storage-utils";
  * - 本地有而云端没有的分类会自动补回云端。
  * - 新增/更新/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
  * - 不会删除云端独有的分类，避免多设备/多管理员场景下误删他人数据。
+ *
+ * 性能优化：
+ * - 同一次页面生命周期内对 `readAll` 结果做内存缓存，避免重复请求。
  */
 const KEY = "gnc_categories_v1";
+
+let cache: string[] | null = null;
 
 function parseLocalCategories(): string[] {
   const value = readLocal<unknown>(KEY, []);
@@ -43,6 +48,8 @@ async function syncRemote(list: string[]): Promise<void> {
 }
 
 async function readAll(): Promise<string[]> {
+  if (cache) return cache;
+
   const local = parseLocalCategories();
   if (!isSupabaseEnabled()) return local;
 
@@ -52,6 +59,7 @@ async function readAll(): Promise<string[]> {
     const merged = Array.from(new Set([...local, ...remote]));
     writeLocal(KEY, merged);
     await syncRemote(merged);
+    cache = merged;
     return merged;
   } catch (e) {
     console.warn("[category-store] 读取 Supabase 失败，回退到 localStorage", e);
@@ -61,6 +69,7 @@ async function readAll(): Promise<string[]> {
 
 async function writeAll(list: string[]): Promise<void> {
   writeLocal(KEY, list);
+  cache = list;
   try {
     await syncRemote(list);
   } catch (e) {

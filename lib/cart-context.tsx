@@ -80,23 +80,32 @@ function orderReducer(state: Order[], action: OrderAction): Order[] {
 }
 
 /* ---------------- Context shapes ---------------- */
-interface CartCtx {
+interface CartStateCtx {
   items: CartItem[];
   totalAmount: number;
   totalCount: number;
+}
+
+interface CartActionsCtx {
   addItem: (item: CartItem) => void;
   removeItem: (productId: string, spec: string) => void;
   updateQty: (productId: string, spec: string, quantity: number) => void;
   clearCart: () => void;
 }
-interface OrderCtx {
+
+interface OrderStateCtx {
   orders: Order[];
+}
+
+interface OrderActionsCtx {
   addOrder: (order: Order) => void;
   updateOrder: (order: Order) => void;
 }
 
-const CartContext = createContext<CartCtx | null>(null);
-const OrderHistoryContext = createContext<OrderCtx | null>(null);
+const CartStateContext = createContext<CartStateCtx | null>(null);
+const CartActionsContext = createContext<CartActionsCtx | null>(null);
+const OrderStateContext = createContext<OrderStateCtx | null>(null);
+const OrderActionsContext = createContext<OrderActionsCtx | null>(null);
 
 const CART_KEY = "gnc_cart";
 const ORDER_KEY = "gnc_orders";
@@ -163,6 +172,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [items]
   );
 
+  const cartStateValue = useMemo(
+    () => ({ items, totalAmount, totalCount }),
+    [items, totalAmount, totalCount]
+  );
+
   const addItem = useCallback(
     (item: CartItem) => dispatch({ type: "ADD_ITEM", item }),
     []
@@ -179,18 +193,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
   );
   const clearCart = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
 
-  const cartValue: CartCtx = useMemo(
-    () => ({
-      items,
-      totalAmount,
-      totalCount,
-      addItem,
-      removeItem,
-      updateQty,
-      clearCart,
-    }),
-    [items, totalAmount, totalCount, addItem, removeItem, updateQty, clearCart]
+  const cartActionsValue = useMemo(
+    () => ({ addItem, removeItem, updateQty, clearCart }),
+    [addItem, removeItem, updateQty, clearCart]
   );
+
+  const orderStateValue = useMemo(() => ({ orders }), [orders]);
 
   const addOrder = useCallback(
     (order: Order) => dispatchOrder({ type: "ADD_ORDER", order }),
@@ -201,28 +209,65 @@ export function AppProviders({ children }: { children: ReactNode }) {
     []
   );
 
-  const orderValue: OrderCtx = useMemo(
-    () => ({ orders, addOrder, updateOrder }),
-    [orders, addOrder, updateOrder]
+  const orderActionsValue = useMemo(
+    () => ({ addOrder, updateOrder }),
+    [addOrder, updateOrder]
   );
 
   return (
-    <CartContext.Provider value={cartValue}>
-      <OrderHistoryContext.Provider value={orderValue}>
-        {children}
-      </OrderHistoryContext.Provider>
-    </CartContext.Provider>
+    <CartStateContext.Provider value={cartStateValue}>
+      <CartActionsContext.Provider value={cartActionsValue}>
+        <OrderStateContext.Provider value={orderStateValue}>
+          <OrderActionsContext.Provider value={orderActionsValue}>
+            {children}
+          </OrderActionsContext.Provider>
+        </OrderStateContext.Provider>
+      </CartActionsContext.Provider>
+    </CartStateContext.Provider>
   );
 }
 
-export function useCart(): CartCtx {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within AppProviders");
+/** 只订阅购物车状态（items / totalAmount / totalCount） */
+export function useCartState(): CartStateCtx {
+  const ctx = useContext(CartStateContext);
+  if (!ctx) throw new Error("useCartState must be used within AppProviders");
   return ctx;
 }
 
-export function useOrders(): OrderCtx {
-  const ctx = useContext(OrderHistoryContext);
-  if (!ctx) throw new Error("useOrders must be used within AppProviders");
+/** 只订阅购物车操作（add / remove / update / clear） */
+export function useCartActions(): CartActionsCtx {
+  const ctx = useContext(CartActionsContext);
+  if (!ctx) throw new Error("useCartActions must be used within AppProviders");
   return ctx;
+}
+
+/** 只订阅订单状态 */
+export function useOrdersState(): OrderStateCtx {
+  const ctx = useContext(OrderStateContext);
+  if (!ctx) throw new Error("useOrdersState must be used within AppProviders");
+  return ctx;
+}
+
+/** 只订阅订单操作 */
+export function useOrdersActions(): OrderActionsCtx {
+  const ctx = useContext(OrderActionsContext);
+  if (!ctx) throw new Error("useOrdersActions must be used within AppProviders");
+  return ctx;
+}
+
+interface CartCtx extends CartStateCtx, CartActionsCtx {}
+interface OrderCtx extends OrderStateCtx, OrderActionsCtx {}
+
+/** 兼容旧用法：同时订阅购物车状态与操作（会随购物车变化重渲染） */
+export function useCart(): CartCtx {
+  const state = useCartState();
+  const actions = useCartActions();
+  return useMemo(() => ({ ...state, ...actions }), [state, actions]);
+}
+
+/** 兼容旧用法：同时订阅订单状态与操作 */
+export function useOrders(): OrderCtx {
+  const state = useOrdersState();
+  const actions = useOrdersActions();
+  return useMemo(() => ({ ...state, ...actions }), [state, actions]);
 }

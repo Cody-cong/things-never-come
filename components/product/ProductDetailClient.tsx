@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShoppingCart, Plus, Minus, Check, ChevronLeft } from "lucide-react";
 import { getProductById } from "@/lib/product-store";
-import { useCart } from "@/lib/cart-context";
+import { useCartState, useCartActions } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { checkPurchaseLimit, flyToCart } from "@/lib/cart-utils";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 import dynamic from "next/dynamic";
 import ProductImage from "@/components/ProductImage";
 import RippleButton from "@/components/RippleButton";
@@ -16,42 +18,12 @@ const LimitAlertModal = dynamic(() => import("@/components/LimitAlertModal"), {
   ssr: false,
 });
 
-function flyToCart(sourceEl: HTMLElement | null, quantity: number) {
-  const target = document.getElementById("cart-target");
-  if (!target || !sourceEl) return;
-
-  const src = sourceEl.getBoundingClientRect();
-  const dst = target.getBoundingClientRect();
-
-  const el = document.createElement("div");
-  el.className =
-    "fixed z-[100] flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-float pointer-events-none";
-  el.textContent = `+${quantity}`;
-  el.style.left = `${src.left + src.width / 2 - 12}px`;
-  el.style.top = `${src.top + src.height / 2 - 12}px`;
-  document.body.appendChild(el);
-
-  const dx = dst.left + dst.width / 2 - (src.left + src.width / 2);
-  const dy = dst.top + dst.height / 2 - (src.top + src.height / 2);
-
-  el.animate(
-    [
-      { transform: "translate(0, 0) scale(1)", opacity: 1 },
-      {
-        transform: `translate(${dx * 0.55}px, ${dy * 0.55}px) scale(1.15)`,
-        opacity: 1,
-        offset: 0.5,
-      },
-      { transform: `translate(${dx}px, ${dy}px) scale(0.45)`, opacity: 0.4 },
-    ],
-    { duration: 680, easing: "cubic-bezier(0.2, 0.75, 0.25, 1)" }
-  ).onfinish = () => el.remove();
-}
-
 export default function ProductDetailClient() {
   const router = useRouter();
-  const { items, addItem } = useCart();
-  const [id, setId] = useState("");
+  const { items } = useCartState();
+  const { addItem } = useCartActions();
+  const searchParams = useClientSearchParams();
+  const productId = searchParams.get("id") ?? "";
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [spec, setSpec] = useState("");
@@ -64,32 +36,22 @@ export default function ProductDetailClient() {
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const productId = new URLSearchParams(window.location.search).get("id") ?? "";
-    setId(productId);
     async function load() {
+      setLoading(true);
       const p = await getProductById(productId);
       setProduct(p ?? null);
       if (p) setSpec(p.specs[0] ?? "");
       setLoading(false);
     }
     load();
-  }, []);
+  }, [productId]);
 
   const handleAdd = () => {
     if (!product) return;
-    const max = product.maxQuantity;
-    if (max && max > 0) {
-      const currentQty = items
-        .filter((i) => i.productId === product.id)
-        .reduce((sum, i) => sum + i.quantity, 0);
-      if (currentQty + quantity > max) {
-        setLimitAlert({
-          show: true,
-          message:
-            product.limitMessage?.trim() || `该商品每人限购 ${max} 件`,
-        });
-        return;
-      }
+    const check = checkPurchaseLimit(product, quantity, items);
+    if (!check.allowed) {
+      setLimitAlert({ show: true, message: check.message || "" });
+      return;
     }
     addItem({
       productId: product.id,

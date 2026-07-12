@@ -3,20 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Package, Download, Home } from "lucide-react";
-import { useOrders } from "@/lib/cart-context";
+import { useOrdersState } from "@/lib/cart-context";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 import { saveReceiptAsImage } from "@/lib/save-receipt-image";
 import ReceiptContent from "./ReceiptContent";
 
 export default function ReceiptClient() {
   const router = useRouter();
-  const { orders } = useOrders();
-  const [orderId, setOrderId] = useState("");
+  const { orders } = useOrdersState();
+  const searchParams = useClientSearchParams();
+  const orderId = searchParams.get("orderId") ?? "";
   const [mounted, setMounted] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setOrderId(new URLSearchParams(window.location.search).get("orderId") ?? "");
     setMounted(true);
   }, []);
 

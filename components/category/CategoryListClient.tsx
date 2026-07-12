@@ -4,12 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getProductsByCategory } from "@/lib/product-store";
 import { getCategories } from "@/lib/category-store";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 import ProductCard from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
 
 export default function CategoryListClient() {
   const router = useRouter();
-  const [name, setName] = useState("ALL");
+  const searchParams = useClientSearchParams();
+  const initialName = searchParams.get("name") ?? "ALL";
+  const [name, setName] = useState(initialName);
   const [loading, setLoading] = useState(true);
   const [list, setList] = useState<Product[]>([]);
   const [cats, setCats] = useState<string[]>([]);
@@ -26,11 +29,10 @@ export default function CategoryListClient() {
   }, []);
 
   useEffect(() => {
-    const categoryName =
-      new URLSearchParams(window.location.search).get("name") ?? "ALL";
+    const categoryName = searchParams.get("name") ?? "ALL";
     setName(categoryName);
     loadCategory(categoryName);
-  }, [loadCategory]);
+  }, [searchParams, loadCategory]);
 
   function switchCategory(next: string) {
     setName(next);

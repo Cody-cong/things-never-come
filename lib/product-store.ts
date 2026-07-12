@@ -10,8 +10,14 @@ import { readLocal, writeLocal, isValidArray } from "./storage-utils";
  *   防止其他设备/浏览器残留的旧数据被重新同步回云端。
  * - 未配置 Supabase 或读取失败时，回退到 localStorage。
  * - 新增/更新/删除会同时操作本地和云端，云端失败只发警告不阻塞界面。
+ *
+ * 性能优化：
+ * - 同一次页面生命周期内对 `readAll` 结果做内存缓存，避免重复请求。
+ * - `getProductById` / `getHotProducts` 使用 Supabase 侧过滤，不再拉取全表。
  */
 const KEY = "gnc_products_v1";
+
+let cache: Product[] | null = null;
 
 /** 管理端可编辑字段子集 */
 export interface ProductInput {
@@ -52,6 +58,31 @@ async function readRemote(): Promise<Product[]> {
   return (data ?? []).map(rowToProduct);
 }
 
+async function readRemoteById(id: string): Promise<Product | undefined> {
+  if (!isSupabaseEnabled() || !supabase) return undefined;
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") return undefined; // no rows
+    throw error;
+  }
+  return data ? rowToProduct(data) : undefined;
+}
+
+async function readRemoteHot(): Promise<Product[]> {
+  if (!isSupabaseEnabled() || !supabase) return [];
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("hot", true)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map(rowToProduct);
+}
+
 async function writeRemote(product: Product): Promise<void> {
   if (!isSupabaseEnabled() || !supabase) return;
   const { error } = await supabase
@@ -67,6 +98,8 @@ async function removeRemote(id: string): Promise<void> {
 }
 
 async function readAll(): Promise<Product[]> {
+  if (cache) return cache;
+
   const { list: local } = parseLocalProducts();
   if (!isSupabaseEnabled()) return local;
 
@@ -76,6 +109,7 @@ async function readAll(): Promise<Product[]> {
     // Supabase 为单一事实来源。只要配置并读取成功，就使用云端数据并覆盖本地，
     // 避免本地旧数据（包括其他设备/浏览器残留数据）被重新同步回云端。
     writeLocal(KEY, remote);
+    cache = remote;
     return remote;
   } catch (e) {
     console.warn("[product-store] 读取 Supabase 失败，回退到 localStorage", e);
@@ -90,14 +124,39 @@ export async function getAllProducts(): Promise<Product[]> {
 
 /** 按 id 查询商品 */
 export async function getProductById(id: string): Promise<Product | undefined> {
-  const list = await readAll();
-  return list.find((p) => p.id === id);
+  if (!id) return undefined;
+  if (cache) return cache.find((p) => p.id === id);
+
+  if (!isSupabaseEnabled()) {
+    const { list: local } = parseLocalProducts();
+    return local.find((p) => p.id === id);
+  }
+
+  try {
+    return await readRemoteById(id);
+  } catch (e) {
+    console.warn("[product-store] 按 ID 读取 Supabase 失败，回退到 localStorage", e);
+    const { list: local } = parseLocalProducts();
+    return local.find((p) => p.id === id);
+  }
 }
 
 /** 返回热门商品（hot = true） */
 export async function getHotProducts(): Promise<Product[]> {
-  const list = await readAll();
-  return list.filter((p) => p.hot);
+  if (cache) return cache.filter((p) => p.hot);
+
+  if (!isSupabaseEnabled()) {
+    const { list: local } = parseLocalProducts();
+    return local.filter((p) => p.hot);
+  }
+
+  try {
+    return await readRemoteHot();
+  } catch (e) {
+    console.warn("[product-store] 读取热门商品失败，回退到本地过滤", e);
+    const { list: local } = parseLocalProducts();
+    return local.filter((p) => p.hot);
+  }
 }
 
 /** 按分类查询商品，category 为 "ALL" 时返回全部 */
@@ -129,6 +188,7 @@ export async function addProduct(input: ProductInput): Promise<Product> {
   };
   localList.push(product);
   writeLocal(KEY, localList);
+  cache = localList;
   await writeRemote(product);
   return product;
 }
@@ -143,6 +203,7 @@ export async function updateProduct(
   if (idx < 0) return;
   localList[idx] = { ...localList[idx], ...patch };
   writeLocal(KEY, localList);
+  cache = localList;
   await writeRemote(localList[idx]);
 }
 
@@ -150,6 +211,7 @@ export async function updateProduct(
 export async function deleteProduct(id: string): Promise<void> {
   const localList = (await readAll()).filter((p) => p.id !== id);
   writeLocal(KEY, localList);
+  cache = localList;
   await removeRemote(id);
 }
 
@@ -158,6 +220,7 @@ export async function deleteProducts(ids: string[]): Promise<void> {
   const idSet = new Set(ids);
   const localList = (await readAll()).filter((p) => !idSet.has(p.id));
   writeLocal(KEY, localList);
+  cache = localList;
   if (isSupabaseEnabled() && supabase) {
     const { error } = await supabase.from("products").delete().in("id", ids);
     if (error) throw error;
@@ -167,6 +230,7 @@ export async function deleteProducts(ids: string[]): Promise<void> {
 /** 一键删除所有商品：写入空数组并清空云端 */
 export async function deleteAllProducts(): Promise<void> {
   writeLocal(KEY, []);
+  cache = [];
   if (isSupabaseEnabled() && supabase) {
     const { error } = await supabase.from("products").delete().neq("id", "");
     if (error) throw error;
